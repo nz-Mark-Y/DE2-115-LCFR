@@ -2,25 +2,33 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include "system.h"                     // to use the symbolic names
-#include "altera_avalon_pio_regs.h" 	// to use PIO functions
-#include "alt_types.h"                 	// alt_u32 is a kind of alt_types
-#include "sys/alt_irq.h"              	// to register interrupts
+
+/* ISR Includes. */
+#include "system.h"
+#include "altera_avalon_pio_regs.h"
+#include "alt_types.h"
+#include "sys/alt_irq.h"
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+/* Definitions. */
 #define mainREG_TEST_1_PARAMETER    ( ( void * ) 0x12345678 )
 #define mainREG_TEST_2_PARAMETER    ( ( void * ) 0x87654321 )
 #define mainREG_TEST_PRIORITY       ( tskIDLE_PRIORITY + 1)
+#define SAMPLE_FREQ 				16000
+
+/* Function Declarations. */
 static void prvFirstRegTestTask(void *pvParameters);
 static void prvSecondRegTestTask(void *pvParameters);
 
+/* Global Variables. */
 double signalFreq = 0;
 double rocFreq = 0;
 
+/* ISRs. */
 void button_interrupts_function(void* context, alt_u32 id)
 {
 	int* temp = (int*) context;
@@ -29,17 +37,21 @@ void button_interrupts_function(void* context, alt_u32 id)
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
 }
 
-void freq_relay(){
+void freq_relay()
+{
 	unsigned int temp = IORD(FREQUENCY_ANALYSER_BASE, 0);
-	printf("%f Hz\n", 16000/(double)temp);
 	
 	//Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
-	rocFreq = abs((16000/(double)temp) - signalFreq)*16000/(double)temp;
-	signalFreq = 16000/(double)temp;
+	if (temp > 0)
+	{
+		rocFreq = ((SAMPLE_FREQ / (double) temp) - signalFreq) * (SAMPLE_FREQ / (double) temp);
+		signalFreq = SAMPLE_FREQ / (double) temp;
+	}
 
 	return;
 }
 
+/* Main function. */
 int main(void)
 {
 	int buttonValue = 0;
@@ -56,12 +68,14 @@ int main(void)
 
 	for(;;);
 }
+
+/* Tasks. */
 static void prvFirstRegTestTask(void *pvParameters)
 {
 	while (1)
 	{
 		printf("Signal frequency: %f Hz\n", signalFreq);
-		vTaskDelay(10);
+		vTaskDelay(100);
 	}
 }
 
@@ -70,6 +84,6 @@ static void prvSecondRegTestTask(void *pvParameters)
 	while (1)
 	{
 		printf("Rate of change: %f\n", rocFreq);
-		vTaskDelay(10);
+		vTaskDelay(100);
 	}
 }

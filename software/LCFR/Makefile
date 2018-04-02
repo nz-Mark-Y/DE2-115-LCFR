@@ -150,7 +150,7 @@ C_SRCS += FreeRTOS/port.c
 C_SRCS += FreeRTOS/queue.c
 C_SRCS += FreeRTOS/tasks.c
 C_SRCS += FreeRTOS/timers.c
-C_SRCS += freertos_test.c
+C_SRCS += LCFR_main.c
 CXX_SRCS :=
 ASM_SRCS := FreeRTOS/port_asm.S
 
