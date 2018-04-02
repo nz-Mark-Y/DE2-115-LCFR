@@ -18,6 +18,9 @@
 static void prvFirstRegTestTask(void *pvParameters);
 static void prvSecondRegTestTask(void *pvParameters);
 
+double signalFreq = 0;
+double rocFreq = 0;
+
 void button_interrupts_function(void* context, alt_u32 id)
 {
 	int* temp = (int*) context;
@@ -29,6 +32,11 @@ void button_interrupts_function(void* context, alt_u32 id)
 void freq_relay(){
 	unsigned int temp = IORD(FREQUENCY_ANALYSER_BASE, 0);
 	printf("%f Hz\n", 16000/(double)temp);
+	
+	//Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
+	rocFreq = abs((16000/(double)temp) - signalFreq)*16000/(double)temp;
+	signalFreq = 16000/(double)temp;
+
 	return;
 }
 
@@ -52,7 +60,7 @@ static void prvFirstRegTestTask(void *pvParameters)
 {
 	while (1)
 	{
-		printf("Task 1\n");
+		printf("Signal frequency: %f Hz\n", signalFreq);
 		vTaskDelay(10);
 	}
 }
@@ -61,7 +69,7 @@ static void prvSecondRegTestTask(void *pvParameters)
 {
 	while (1)
 	{
-		printf("Task 2\n");
+		printf("Rate of change: %f\n", rocFreq);
 		vTaskDelay(10);
 	}
 }
