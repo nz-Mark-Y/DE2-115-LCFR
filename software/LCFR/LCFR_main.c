@@ -55,6 +55,7 @@ void button_interrupts_function(void* context, alt_u32 id) {
 	} else {
 		maintenance = 1;
 		printf("Maintenance Mode Enabled\n");
+		alt_up_ps2_enable_read_interrupt(ps2_device);
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7); // Clear edge capture register
 }
@@ -132,7 +133,7 @@ int main(void) {
 		return 1;
 	}
 	
-	alt_up_ps2_enable_read_interrupt(ps2_device);
+	//alt_up_ps2_enable_read_interrupt(ps2_device);
 	alt_irq_register(PS2_IRQ, ps2_device, ps2_isr);
 
 	
