@@ -53,13 +53,14 @@ void button_interrupts_function(void* context, alt_u32 id) {
 		maintenance = 0;
 		printf("Maintenance Mode Disabled\n");
 
-		alt_up_ps2_dev * ps2_device = alt_up_ps2_open_dev(PS2_NAME);
+		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 		alt_up_ps2_disable_read_interrupt(ps2_device);
 	} else {
 		maintenance = 1;
 		printf("Maintenance Mode Enabled\n");
 
-		alt_up_ps2_dev * ps2_device = alt_up_ps2_open_dev(PS2_NAME);
+		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
+		alt_up_ps2_clear_fifo(ps2_device);
 		alt_up_ps2_enable_read_interrupt(ps2_device);
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7); // Clear edge capture register
@@ -125,22 +126,21 @@ int main(void) {
 
 	alt_irq_register(FREQUENCY_ANALYSER_IRQ, 0, freq_relay);
 
-	// Set up Tasks
-	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
-	xTaskCreate( prvLEDOutTask, "Rreg2", configMINIMAL_STACK_SIZE, mainREG_LED_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
-	xTaskCreate( prvVGAOutTask, "Rreg3", configMINIMAL_STACK_SIZE, mainREG_VGA_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
+	alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 
 	//Set up keyboard
-	alt_up_ps2_dev * ps2_device = alt_up_ps2_open_dev(PS2_NAME);
-	
 	if(ps2_device == NULL){
 		printf("Couldn't find a PS/2 device\n");
 		return 1;
 	}
-	
-	//alt_up_ps2_enable_read_interrupt(ps2_device);
+
+	alt_up_ps2_disable_read_interrupt(ps2_device);
 	alt_irq_register(PS2_IRQ, ps2_device, ps2_isr);
 
+	// Set up Tasks
+	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
+	xTaskCreate( prvLEDOutTask, "Rreg2", configMINIMAL_STACK_SIZE, mainREG_LED_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
+	xTaskCreate( prvVGAOutTask, "Rreg3", configMINIMAL_STACK_SIZE, mainREG_VGA_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
 	
 	//Start task scheduler
 	vTaskStartScheduler();
@@ -156,7 +156,7 @@ static void prvDecideTask(void *pvParameters) {
 		int masked_switch_value = switch_value & 0x000ff;
 		
 		if (maintenance == 0) {
-			if(fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
+			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
 				if (first_load_shed == 0) {
 					first_load_shed = 1;
 					drop_load();
