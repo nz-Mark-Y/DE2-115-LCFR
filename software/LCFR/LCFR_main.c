@@ -37,6 +37,7 @@
 #define PS2_dp 0x71
 #define PS2_ENTER 0x5A
 #define PS2_DP 0x71
+#define PS2_KEYRELEASE 0xF0
 
 /* Function Declarations. */
 static void prvDecideTask(void *pvParameters);
@@ -114,10 +115,15 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 		inputDecimalFlag = 0;
 		inputNumberCounter = 0;
+	} else if(byte == PS2_KEYRELEASE) {
+		//Do nothing	
 	} else {
+		
+		//Take care of decimal point
 		if (byte == PS2_DP) {
 			inputDecimalFlag = 1;
 		}
+
 		if (inputDecimalFlag == 0) {
 			//Take care of upper part of number
 			inputNumber *= 10;
@@ -161,7 +167,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 			//Take care of lower part of number
 			inputNumberCounter += 1;
 			
-			//Translate and add to upper part of number
+			//Translate and add to lower part of number
 			switch(byte) {
 				case PS2_0:
 					inputDecimalEquiv += 0.0;
@@ -197,11 +203,11 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 					break;
 			}
 
-			//Translate to 'normal' decimal
+			//Convert to 'normal' decimal
 			int i = 0;
 			inputDecimal = inputDecimalEquiv;
 			for(i = 0; i < inputNumberCounter; i++) {
-				inputDecimal /= 10;
+				inputDecimal /= 10.0;
 			}
 		}
 	}
