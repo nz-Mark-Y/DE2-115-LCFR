@@ -174,7 +174,23 @@ static void prvLEDOutTask(void *pvParameters)
 	while (1)
 	{
 		int loads_num = 0;
-		int i;
+		int i = 0;
+		
+		//Temporarily copy lower half of load array while overwriting it with upper half to inverse it
+		temp_loads[4];
+		for(i = 0; i < 4; i++)
+		{
+			temp_loads[i] = loads[i];
+			loads[i] = loads[7 - i];
+		}
+
+		//Finish inversing array
+		for(i = 0; i < 4; i++)
+		{
+			loads[7 - i] = temp_loads[i];
+		}
+
+		//Translate to binary
 		for (i = 0; i < 8; i++)
 		{
 			loads_num = loads_num << 1;
