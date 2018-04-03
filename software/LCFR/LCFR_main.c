@@ -43,6 +43,7 @@
 static void prvDecideTask(void *pvParameters);
 static void prvLEDOutTask(void *pvParameters);
 static void prvVGAOutTask(void *pvParameters);
+void translate_ps2(unsigned char byte, double *value);
 
 /* Global Variables. */
 int first_load_shed = 0;
@@ -59,8 +60,8 @@ double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 int switches[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
-double inputNumber = 0.0, inputDecimal = 0.0, inputDecimalEquiv = 0.0, inputFinalNumber = 0.0;
-int inputNumberCounter = 0, inputDecimalFlag = 0, inputDuplicateFlag = 0;
+double input_number = 0.0, input_decimal = 0.0, input_decimal_equiv = 0.0, input_final_number = 0.0;
+int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
 /* Handles. */
 TimerHandle_t timer;
@@ -106,132 +107,65 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
 
 	if (byte == PS2_ENTER) {
-		if(inputDuplicateFlag == 1) {
-			inputDuplicateFlag = 0;
+		if(input_duplicate_flag == 1) {
+			input_duplicate_flag = 0;
 		} else {
-			if(inputDecimalFlag == 1) {
-				inputDecimal *= 10;
+			if(input_decimal_flag == 1) {
+				input_decimal *= 10;
 			} else {
-				inputNumber /= 10;
+				input_number /= 10;
 			}
-			inputFinalNumber = inputNumber + inputDecimal;
+			input_final_number = input_number + input_decimal;
 			
 			if(desired_flag == 0) {
-				desired_min_freq = inputFinalNumber;
+				desired_min_freq = input_final_number;
 				printf("The preferred minimum frequency was set to: %f\n", desired_min_freq);
 				desired_flag = 1;
 			} else {
-				desired_max_roc_freq = inputFinalNumber;
+				desired_max_roc_freq = input_final_number;
 				printf("The preferred maximum rate of change of frequency was set to: %f\n", desired_max_roc_freq);
 				desired_flag = 0;
 			}
 
 			//Clear numbers
-			inputNumber = 0.0;
-			inputDecimal = 0.0;
-			inputFinalNumber = 0.0;
-			inputDecimalEquiv = 0.0;
+			input_number = 0.0;
+			input_decimal = 0.0;
+			input_final_number = 0.0;
+			input_decimal_equiv = 0.0;
 
-			inputDecimalFlag = 0;
-			inputNumberCounter = 0;
+			input_decimal_flag = 0;
+			input_number_counter = 0;
 		}
 	} else if(byte == PS2_KEYRELEASE) {
-		inputDuplicateFlag = 1;	
+		input_duplicate_flag = 1;
 	} else {
-		
-		if(inputDuplicateFlag == 1) {
-			inputDuplicateFlag = 0;
+		if(input_duplicate_flag == 1) {
+			input_duplicate_flag = 0;
 		} else {
 			//Take care of decimal point
 			if (byte == PS2_DP) {
-				inputDecimalFlag = 1;
+				input_decimal_flag = 1;
 			}
 
-			if (inputDecimalFlag == 0) {
+			if (input_decimal_flag == 0) {
 				//Take care of upper part of number
-				inputNumber *= 10;
+				input_number *= 10;
 				
 				//Translate and add to upper part of number
-				switch(byte) {
-					case PS2_0:
-						inputNumber += 0.0;
-						break;
-					case PS2_1:
-						inputNumber += 1.0;
-						break;
-					case PS2_2:
-						inputNumber += 2.0;
-						break;
-					case PS2_3:
-						inputNumber += 3.0;
-						break;
-					case PS2_4:
-						inputNumber += 4.0;
-						break;
-					case PS2_5:
-						inputNumber += 5.0;
-						break;
-					case PS2_6:
-						inputNumber += 6.0;
-						break;
-					case PS2_7:
-						inputNumber += 7.0;
-						break;
-					case PS2_8:
-						inputNumber += 8.0;
-						break;
-					case PS2_9:
-						inputNumber += 9.0;
-						break;
-					default:
-						break;
-				}
+				translate_ps2(byte, &input_number);
 			} else {
 				//Take care of lower part of number
-				inputNumberCounter += 1;
-				inputDecimalEquiv *= 10;
+				input_number_counter += 1;
+				input_decimal_equiv *= 10;
 
 				//Translate and add to lower part of number
-				switch(byte) {
-					case PS2_0:
-						inputDecimalEquiv += 0.0;
-						break;
-					case PS2_1:
-						inputDecimalEquiv += 1.0;
-						break;
-					case PS2_2:
-						inputDecimalEquiv += 2.0;
-						break;
-					case PS2_3:
-						inputDecimalEquiv += 3.0;
-						break;
-					case PS2_4:
-						inputDecimalEquiv += 4.0;
-						break;
-					case PS2_5:
-						inputDecimalEquiv += 5.0;
-						break;
-					case PS2_6:
-						inputDecimalEquiv += 6.0;
-						break;
-					case PS2_7:
-						inputDecimalEquiv += 7.0;
-						break;
-					case PS2_8:
-						inputDecimalEquiv += 8.0;
-						break;
-					case PS2_9:
-						inputDecimalEquiv += 9.0;
-						break;
-					default:
-						break;
-				}
+				translate_ps2(byte, &input_decimal_equiv);
 
 				//Convert to 'normal' decimal
 				int i = 0;
-				inputDecimal = inputDecimalEquiv;
-				for(i = 0; i < inputNumberCounter; i++) {
-					inputDecimal /= 10.0;
+				input_decimal = input_decimal_equiv;
+				for(i = 0; i < input_number_counter; i++) {
+					input_decimal /= 10.0;
 				}
 			}
 		}
@@ -259,6 +193,44 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	else if ((loads[2] == 0) && (switches[2] == 1)) loads[2] = 1; \
 	else if ((loads[1] == 0) && (switches[1] == 1)) loads[1] = 1; \
 	else if (switches[0] == 1) loads[0] = 1; \
+}
+
+/* Functions. */
+void translate_ps2(unsigned char byte, double *value) {
+	switch(byte) {
+		case PS2_0:
+			*value += 0.0;
+			break;
+		case PS2_1:
+			*value += 1.0;
+			break;
+		case PS2_2:
+			*value += 2.0;
+			break;
+		case PS2_3:
+			*value += 3.0;
+			break;
+		case PS2_4:
+			*value += 4.0;
+			break;
+		case PS2_5:
+			*value += 5.0;
+			break;
+		case PS2_6:
+			*value += 6.0;
+			break;
+		case PS2_7:
+			*value += 7.0;
+			break;
+		case PS2_8:
+			*value += 8.0;
+			break;
+		case PS2_9:
+			*value += 9.0;
+			break;
+		default:
+			break;
+	}
 }
 
 /* Callbacks. */
