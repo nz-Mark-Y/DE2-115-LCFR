@@ -116,11 +116,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		inputDecimalFlag = 0;
 		inputNumberCounter = 0;
 	} else if(byte == PS2_KEYRELEASE) {
-<<<<<<< HEAD
-		//Do nothing
-=======
 		inputDuplicateFlag = 1;	
->>>>>>> 60d269d7242cca30652cc11852f0283f4dc442be
 	} else {
 		
 		if(inputDuplicateFlag == 1) {
