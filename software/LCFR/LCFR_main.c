@@ -35,6 +35,7 @@
 #define PS2_9 0x7D
 #define PS2_0 0x70
 #define PS2_ENTER 0xE05A
+#define PS2_DP 0x71
 
 
 /* Function Declarations. */
@@ -54,6 +55,8 @@ double min_freq = 48.5;
 double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+double inputNumber = 0.0, inputDecimal = 0.0, inputDecimalEquiv = 0.0, inputFinalNumber = 0.0;
+int inputNumberCounter = 0, inputDecimalFlag = 0;
 
 /* Handles. */
 TimerHandle_t timer;
@@ -62,13 +65,16 @@ TimerHandle_t timer;
 void button_interrupts_function(void* context, alt_u32 id) {
 	int* temp = (int*) context;
 	(*temp) = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE); // Store which button was pressed
+
 	if (maintenance == 1) {
 		maintenance = 0;
 		printf("Maintenance Mode Disabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 		alt_up_ps2_disable_read_interrupt(ps2_device);
-	} else {
+	} 
+	else 
+	{
 		maintenance = 1;
 		printf("Maintenance Mode Enabled\n");
 
@@ -94,6 +100,121 @@ void freq_relay() {
 void ps2_isr(void* ps2_device, alt_u32 id){
 	unsigned char byte;
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
+	
+	if(byte == PS2_ENTER)
+	{
+		inputFinalNumber = inputNumber + inputDecimal;
+		printf("Final number was: %d\n", inputFinalNumber);
+
+		//Clear numbers
+		inputNumber = 0.0;
+		inputDecimal = 0.0;
+		inputFinalNumber = 0.0;
+		inputDecimalEquiv = 0.0;
+
+		inputDecimalFlag = 0;
+		inputNumberCounter = 0;
+	}
+	else
+	{
+		if(byte == PS2_DP)
+		{
+			decimalFlag = 1;
+		}
+		
+		if(decimalFlag == 0)
+		{
+			//Take care of upper part of number
+			inputNumber *= 10;
+			
+			//Translate and add to upper part of number
+			switch(byte)
+			{
+				case PS2_0:
+					inputNumber += 0.0;
+					break;
+				case PS2_1:
+					inputNumber += 1.0;
+					break;
+				case PS2_2:
+					inputNumber += 2.0;
+					break;
+				case PS2_3:
+					inputNumber += 3.0;
+					break;
+				case PS2_4:
+					inputNumber += 4.0;
+					break;
+				case PS2_5:
+					inputNumber += 5.0;
+					break;
+				case PS2_6:
+					inputNumber += 6.0;
+					break;
+				case PS2_7:
+					inputNumber += 7.0;
+					break;
+				case PS2_8:
+					inputNumber += 8.0;
+					break;
+				case PS2_9:
+					inputNumber += 9.0;
+					break;
+				case default:
+					break;
+			}
+		}
+		else
+		{
+			//Take care of lower part of number
+			inputNumberCounter += 1;
+			
+			//Translate and add to upper part of number
+			switch(byte)
+			{
+				case PS2_0:
+					inputDecimalEquiv += 0.0;
+					break;
+				case PS2_1:
+					inputDecimalEquiv += 1.0;
+					break;
+				case PS2_2:
+					inputDecimalEquiv += 2.0;
+					break;
+				case PS2_3:
+					inputDecimalEquiv += 3.0;
+					break;
+				case PS2_4:
+					inputDecimalEquiv += 4.0;
+					break;
+				case PS2_5:
+					inputDecimalEquiv += 5.0;
+					break;
+				case PS2_6:
+					inputDecimalEquiv += 6.0;
+					break;
+				case PS2_7:
+					inputDecimalEquiv += 7.0;
+					break;
+				case PS2_8:
+					inputDecimalEquiv += 8.0;
+					break;
+				case PS2_9:
+					inputDecimalEquiv += 9.0;
+					break;
+				case default:
+					break;
+			}
+
+			//Translate to 'normal' decimal
+			int i = 0;
+			inputDecimal = inputDecimalEquiv;
+			for(i = 0; i < inputNumberCounter; i++)
+			{
+				inputDecimal /= 10;
+			}
+		}
+	}
 	printf("Scan code: %x\n", byte);
 }
 
