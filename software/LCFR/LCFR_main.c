@@ -9,6 +9,7 @@
 #include "altera_avalon_pio_regs.h"
 #include "alt_types.h"
 #include "sys/alt_irq.h"
+#include "altera_up_avalon_ps2.h"
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
@@ -70,6 +71,12 @@ void freq_relay() {
 	return;
 }
 
+void ps2_isr(void* ps2_device, alt_u32 id){
+	unsigned char byte;
+	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
+	printf("Scan code: %x\n", byte);
+}
+
 /* Function Macros. */
 #define drop_load() { \
 	if (loads[0] == 1) loads[0] = 0; \
@@ -117,6 +124,19 @@ int main(void) {
 	xTaskCreate( prvLEDOutTask, "Rreg2", configMINIMAL_STACK_SIZE, mainREG_LED_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
 	xTaskCreate( prvVGAOutTask, "Rreg3", configMINIMAL_STACK_SIZE, mainREG_VGA_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
 
+	//Set up keyboard
+	alt_up_ps2_dev * ps2_device = alt_up_ps2_open_dev(PS2_NAME);
+	
+	if(ps2_device == NULL){
+		printf("Couldn't find a PS/2 device\n");
+		return 1;
+	}
+	
+	alt_up_ps2_enable_read_interrupt(ps2_device);
+	alt_irq_register(PS2_IRQ, ps2_device, ps2_isr);
+
+	
+	//Start task scheduler
 	vTaskStartScheduler();
 
 	// Only reaches here if not enough heap space to start tasks
