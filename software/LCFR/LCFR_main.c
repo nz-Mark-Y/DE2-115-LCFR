@@ -35,7 +35,7 @@
 #define PS2_9 0x7D
 #define PS2_0 0x70
 #define PS2_dp 0x71
-#define PS2_ENTER 0xE05A
+#define PS2_ENTER 0x5A
 #define PS2_DP 0x71
 
 /* Function Declarations. */
