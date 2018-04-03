@@ -104,17 +104,21 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
 
 	if (byte == PS2_ENTER) {
-		inputFinalNumber = inputNumber + inputDecimal;
-		printf("Final number was: %f\n", inputFinalNumber);
+		if(inputDuplicateFlag == 1) {
+			inputDuplicateFlag = 0;
+		} else {
+			inputFinalNumber = inputNumber + inputDecimal;
+			printf("Final number was: %f\n", inputFinalNumber);
 
-		//Clear numbers
-		inputNumber = 0.0;
-		inputDecimal = 0.0;
-		inputFinalNumber = 0.0;
-		inputDecimalEquiv = 0.0;
+			//Clear numbers
+			inputNumber = 0.0;
+			inputDecimal = 0.0;
+			inputFinalNumber = 0.0;
+			inputDecimalEquiv = 0.0;
 
-		inputDecimalFlag = 0;
-		inputNumberCounter = 0;
+			inputDecimalFlag = 0;
+			inputNumberCounter = 0;
+		}
 	} else if(byte == PS2_KEYRELEASE) {
 		inputDuplicateFlag = 1;	
 	} else {
@@ -169,7 +173,8 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 			} else {
 				//Take care of lower part of number
 				inputNumberCounter += 1;
-				
+				inputDecimalEquiv *= 10;
+
 				//Translate and add to lower part of number
 				switch(byte) {
 					case PS2_0:
