@@ -13,6 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "FreeRTOS/timers.h"
 
 /* Definitions. */
 #define mainREG_DECIDE_PARAMETER    ( ( void * ) 0x12345678 )
@@ -27,9 +28,19 @@ static void prvLEDOutTask(void *pvParameters);
 static void prvVGAOutTask(void *pvParameters);
 
 /* Global Variables. */
+int firstLoadShed = 0;
+int shedFlag = 0;
+int reconnectLoadTimeout = 0;
+int dropLoadTimeout = 0;
+
+double maxRocFreq = 0800838383;
+double minFreq = 10;
 double signalFreq = 0;
 double rocFreq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+
+/* Handlers. */
+TimerHandle_t timer;
 
 /* ISRs. */
 void button_interrupts_function(void* context, alt_u32 id)
@@ -82,7 +93,56 @@ static void prvDecideTask(void *pvParameters)
 	while (1)
 	{
 		printf("Signal frequency: %f Hz\n", signalFreq);
-		vTaskDelay(100);
+		
+		if(rocFreq > maxRocFreq || minFreq > signalFreq)
+		{
+			if(firstLoadShed = 0)
+			{
+				firstLoadShed = 1;
+				dropLoad();
+			}
+			else
+			{
+				reconnectLoadTimeout = 0;
+				
+				if(shedFlag = 0)
+				{
+					xtimerStop(timer, 0);
+				}
+				
+				if(dropLoadTimeout = 0)
+				{
+					timer = xTimerCreate("Shedding Timer", 500, pdTRUE, NULL, vTimerCallback);
+				}
+				else
+				{
+					dropLoad();
+				}
+				
+				shedFlag = 1;
+			}
+		} 
+		else 
+		{
+			dropLoadTimeout = 0;
+			
+			if(shedFlag == 1)
+			{
+				xtimerStop(timer, 0);
+			}
+
+			if(reconnectLoadTimeout = 0)
+			{
+				timer = xTimerCreate("Reconnect Timer", 500, pdTRUE, NULL, vTimerCallback2);
+			} 
+			else
+			{
+				reconnectLoad()
+			}
+			shedFlag = 0;
+		}
+		
+		vTaskDelay(10);
 	}
 }
 
@@ -110,4 +170,18 @@ static void prvVGAOutTask(void *pvParameters)
 		printf("Rate of change: %f\n", rocFreq);
 		vTaskDelay(100);
 	}
+}
+
+
+/*Callback fucntions*/
+
+
+void vTimerCallback(xTimerHandle t_timer){ //Timer flashes green LEDs
+	dropLoad();
+	dropLoadTimeout = 1;
+}
+
+void vTimerCallback2(xTimerHandle t_timer){ //Timer flashes green LEDs
+	reconnectLoad();
+	reconnectLoadTimeout = 1;
 }
