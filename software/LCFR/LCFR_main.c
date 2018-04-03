@@ -58,7 +58,7 @@ double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 int switches[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 double inputNumber = 0.0, inputDecimal = 0.0, inputDecimalEquiv = 0.0, inputFinalNumber = 0.0;
-int inputNumberCounter = 0, inputDecimalFlag = 0;
+int inputNumberCounter = 0, inputDecimalFlag = 0, inputDuplicateFlag = 0;
 
 /* Handles. */
 TimerHandle_t timer;
@@ -116,98 +116,102 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		inputDecimalFlag = 0;
 		inputNumberCounter = 0;
 	} else if(byte == PS2_KEYRELEASE) {
-		//Do nothing	
+		inputDuplicateFlag = 1;	
 	} else {
 		
-		//Take care of decimal point
-		if (byte == PS2_DP) {
-			inputDecimalFlag = 1;
-		}
-
-		if (inputDecimalFlag == 0) {
-			//Take care of upper part of number
-			inputNumber *= 10;
-			
-			//Translate and add to upper part of number
-			switch(byte) {
-				case PS2_0:
-					inputNumber += 0.0;
-					break;
-				case PS2_1:
-					inputNumber += 1.0;
-					break;
-				case PS2_2:
-					inputNumber += 2.0;
-					break;
-				case PS2_3:
-					inputNumber += 3.0;
-					break;
-				case PS2_4:
-					inputNumber += 4.0;
-					break;
-				case PS2_5:
-					inputNumber += 5.0;
-					break;
-				case PS2_6:
-					inputNumber += 6.0;
-					break;
-				case PS2_7:
-					inputNumber += 7.0;
-					break;
-				case PS2_8:
-					inputNumber += 8.0;
-					break;
-				case PS2_9:
-					inputNumber += 9.0;
-					break;
-				default:
-					break;
-			}
+		if(inputDuplicateFlag == 1) {
+			inputDuplicateFlag = 0;
 		} else {
-			//Take care of lower part of number
-			inputNumberCounter += 1;
-			
-			//Translate and add to lower part of number
-			switch(byte) {
-				case PS2_0:
-					inputDecimalEquiv += 0.0;
-					break;
-				case PS2_1:
-					inputDecimalEquiv += 1.0;
-					break;
-				case PS2_2:
-					inputDecimalEquiv += 2.0;
-					break;
-				case PS2_3:
-					inputDecimalEquiv += 3.0;
-					break;
-				case PS2_4:
-					inputDecimalEquiv += 4.0;
-					break;
-				case PS2_5:
-					inputDecimalEquiv += 5.0;
-					break;
-				case PS2_6:
-					inputDecimalEquiv += 6.0;
-					break;
-				case PS2_7:
-					inputDecimalEquiv += 7.0;
-					break;
-				case PS2_8:
-					inputDecimalEquiv += 8.0;
-					break;
-				case PS2_9:
-					inputDecimalEquiv += 9.0;
-					break;
-				default:
-					break;
+			//Take care of decimal point
+			if (byte == PS2_DP) {
+				inputDecimalFlag = 1;
 			}
 
-			//Convert to 'normal' decimal
-			int i = 0;
-			inputDecimal = inputDecimalEquiv;
-			for(i = 0; i < inputNumberCounter; i++) {
-				inputDecimal /= 10.0;
+			if (inputDecimalFlag == 0) {
+				//Take care of upper part of number
+				inputNumber *= 10;
+				
+				//Translate and add to upper part of number
+				switch(byte) {
+					case PS2_0:
+						inputNumber += 0.0;
+						break;
+					case PS2_1:
+						inputNumber += 1.0;
+						break;
+					case PS2_2:
+						inputNumber += 2.0;
+						break;
+					case PS2_3:
+						inputNumber += 3.0;
+						break;
+					case PS2_4:
+						inputNumber += 4.0;
+						break;
+					case PS2_5:
+						inputNumber += 5.0;
+						break;
+					case PS2_6:
+						inputNumber += 6.0;
+						break;
+					case PS2_7:
+						inputNumber += 7.0;
+						break;
+					case PS2_8:
+						inputNumber += 8.0;
+						break;
+					case PS2_9:
+						inputNumber += 9.0;
+						break;
+					default:
+						break;
+				}
+			} else {
+				//Take care of lower part of number
+				inputNumberCounter += 1;
+				
+				//Translate and add to lower part of number
+				switch(byte) {
+					case PS2_0:
+						inputDecimalEquiv += 0.0;
+						break;
+					case PS2_1:
+						inputDecimalEquiv += 1.0;
+						break;
+					case PS2_2:
+						inputDecimalEquiv += 2.0;
+						break;
+					case PS2_3:
+						inputDecimalEquiv += 3.0;
+						break;
+					case PS2_4:
+						inputDecimalEquiv += 4.0;
+						break;
+					case PS2_5:
+						inputDecimalEquiv += 5.0;
+						break;
+					case PS2_6:
+						inputDecimalEquiv += 6.0;
+						break;
+					case PS2_7:
+						inputDecimalEquiv += 7.0;
+						break;
+					case PS2_8:
+						inputDecimalEquiv += 8.0;
+						break;
+					case PS2_9:
+						inputDecimalEquiv += 9.0;
+						break;
+					default:
+						break;
+				}
+
+				//Convert to 'normal' decimal
+				int i = 0;
+				inputDecimal = inputDecimalEquiv;
+				for(i = 0; i < inputNumberCounter; i++) {
+					inputDecimal /= 10.0;
+				}
 			}
 		}
 	}
