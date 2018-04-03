@@ -107,6 +107,11 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		if(inputDuplicateFlag == 1) {
 			inputDuplicateFlag = 0;
 		} else {
+			if(inputDecimalFlag == 1) {
+				inputDecimal *= 10;
+			} else {
+				inputNumber /= 10;
+			}
 			inputFinalNumber = inputNumber + inputDecimal;
 			printf("Final number was: %f\n", inputFinalNumber);
 
