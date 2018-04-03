@@ -116,7 +116,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		inputDecimalFlag = 0;
 		inputNumberCounter = 0;
 	} else if(byte == PS2_KEYRELEASE) {
-		//Do nothing	
+		//Do nothing
 	} else {
 		
 		//Take care of decimal point
@@ -281,41 +281,42 @@ int main(void) {
 /* Tasks. */
 static void prvDecideTask(void *pvParameters) {
 	while (1) {
+		// Switch Load Management
 		int switch_value = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 		int masked_switch_value = switch_value & 0x000ff;
 
 		int i, k, no_loads_shed = 1;
-		for (i = 7; i >= 0; i--) {
+		for (i = 7; i >= 0; i--) { // Iterate through switches array and set if the switch is on or off
 			k = masked_switch_value >> i;
-			if (k & 1) {
-				switches[i] = 1;
-				if (loads[i] == 0) {
+			if (k & 1) { // If the switch at this position is on
+				switches[7-i] = 1;
+				if (loads[7-i] == 0) {
 					no_loads_shed = 0;
 				}
-			}
-			else {
-				switches[i] = 0;
-				loads[i] = 0;
+			} else { // If the switch at this position is off
+				switches[7-i] = 0;
+				loads[7-i] = 0;
 			}
 		}
 
-		if (no_loads_shed == 1) {
+		if (no_loads_shed == 1) { // If all available loads are connected, we are not managing loads.
 			first_load_shed = 0;
 		}
 
+		// Frequency Load Management
 		if (maintenance == 0) {
-			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
-				if (first_load_shed == 0) {
+			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) { // If the current system is unstable
+				if (first_load_shed == 0) { // Drop a load, if we have no dropped loads. First load drop.
 					first_load_shed = 1;
 					drop_load();
 				} else {
-					reconnect_load_timeout = 0;
+					reconnect_load_timeout = 0; // No longer a continuous run of stable data
 
-					if(shed_flag == 0) {
+					if(shed_flag == 0) { // Stop the timer if we are timing a 500ms for a load reconnection
 						xTimerStop(timer, 0);
 					}
 
-					if (drop_load_timeout == 0) {
+					if (drop_load_timeout == 0) { // If we haven't had a continuous run of unstable data
 						timer = xTimerCreate("Shedding Timer", 500, pdTRUE, NULL, vTimerDropCallback);
 						xTimerStart(timer, 0);
 					} else {
@@ -324,13 +325,13 @@ static void prvDecideTask(void *pvParameters) {
 					shed_flag = 1;
 				}
 			} else {
-				drop_load_timeout = 0;
+				drop_load_timeout = 0; // No longer a continuous run of unstable data
 				
-				if (shed_flag == 1) {
+				if (shed_flag == 1) { // Stop the timer if we are timing a 500ms for a load drop
 					xTimerStop(timer, 0);
 				}
 
-				if (reconnect_load_timeout == 0) {
+				if (reconnect_load_timeout == 0) { // If we haven't had a continuous run of stable data
 					timer = xTimerCreate("Reconnect Timer", 500, pdTRUE, NULL, vTimerReconnectCallback);
 					xTimerStart(timer, 0);
 				} else {
@@ -352,6 +353,7 @@ static void prvLEDOutTask(void *pvParameters)
 		int loads_num_rev = 0;
 		int i;
 		
+		// Inverse array for Red LEDS
 		int rev_loads[8];
 		for (i = 0; i < 8; i++) {
 			if (loads[i] == 0) {
@@ -369,6 +371,7 @@ static void prvLEDOutTask(void *pvParameters)
 			loads_num_rev = loads_num_rev + rev_loads[i];
 		}
 
+		// Write to LEDs base
 		if (maintenance == 0) {
 			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
 		} else {
