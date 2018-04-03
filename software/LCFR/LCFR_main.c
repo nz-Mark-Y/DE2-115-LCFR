@@ -33,6 +33,7 @@ int first_load_shed = 0;
 int shed_flag = 0;
 int reconnect_load_timeout = 0;
 int drop_load_timeout = 0;
+int maintenance = 0;
 
 double max_roc_freq = 800838383;
 double min_freq = 50;
@@ -47,7 +48,13 @@ TimerHandle_t timer;
 void button_interrupts_function(void* context, alt_u32 id) {
 	int* temp = (int*) context;
 	(*temp) = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE); // Store which button was pressed
-	printf("Hello\n");
+	if (maintenance == 1) {
+		maintenance = 0;
+		printf("Maintenance Mode Disabled\n");
+	} else {
+		maintenance = 1;
+		printf("Maintenance Mode Enabled\n");
+	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7); // Clear edge capture register
 }
 
@@ -87,13 +94,11 @@ void freq_relay() {
 }
 
 /* Callbacks. */
-void vTimerDropCallback(xTimerHandle t_timer) { //Timer flashes green LEDs
-	drop_load();
+void vTimerDropCallback(xTimerHandle t_timer) {
 	drop_load_timeout = 1;
 }
 
-void vTimerReconnectCallback(xTimerHandle t_timer) { //Timer flashes green LEDs
-	reconnect_load();
+void vTimerReconnectCallback(xTimerHandle t_timer) {
 	reconnect_load_timeout = 1;
 }
 
@@ -123,43 +128,43 @@ static void prvDecideTask(void *pvParameters) {
 	while (1) {
 		int switch_value = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 		int masked_switch_value = switch_value & 0x000ff;
-		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, masked_switch_value);
 		
-		if(fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
-			if (first_load_shed == 0) {
-				first_load_shed = 1;
-				drop_load();
+		if (maintenance == 0) {
+			if(fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
+				if (first_load_shed == 0) {
+					first_load_shed = 1;
+					drop_load();
+				} else {
+					reconnect_load_timeout = 0;
+
+					if(shed_flag == 0) {
+						xTimerStop(timer, 0);
+					}
+
+					if (drop_load_timeout == 0) {
+						timer = xTimerCreate("Shedding Timer", 500, pdTRUE, NULL, vTimerDropCallback);
+						xTimerStart(timer, 0);
+					} else {
+						drop_load();
+					}
+					shed_flag = 1;
+				}
 			} else {
-				reconnect_load_timeout = 0;
+				drop_load_timeout = 0;
 				
-				if(shed_flag == 0) {
+				if (shed_flag == 1) {
 					xTimerStop(timer, 0);
 				}
-				
-				if (drop_load_timeout == 0) {
-					timer = xTimerCreate("Shedding Timer", 500, pdTRUE, NULL, vTimerDropCallback);
+
+				if (reconnect_load_timeout == 0) {
+					timer = xTimerCreate("Reconnect Timer", 500, pdTRUE, NULL, vTimerReconnectCallback);
 					xTimerStart(timer, 0);
 				} else {
-					drop_load();
+					reconnect_load();
 				}
-				shed_flag = 1;
+				shed_flag = 0;
 			}
-		} else {
-			drop_load_timeout = 0;
-			
-			if (shed_flag == 1) {
-				xTimerStop(timer, 0);
-			}
-
-			if (reconnect_load_timeout == 0) {
-				timer = xTimerCreate("Reconnect Timer", 500, pdTRUE, NULL, vTimerReconnectCallback);
-				xTimerStart(timer, 0);
-			} else {
-				reconnect_load();
-			}
-			shed_flag = 0;
 		}
-		
 		vTaskDelay(10);
 	}
 }
