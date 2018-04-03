@@ -24,6 +24,19 @@
 #define mainREG_TEST_PRIORITY       ( tskIDLE_PRIORITY + 1)
 #define SAMPLE_FREQ 				16000
 
+#define PS2_1 0x69
+#define PS2_2 0x72
+#define PS2_3 0x7A
+#define PS2_4 0x6B
+#define PS2_5 0x73
+#define PS2_6 0x74
+#define PS2_7 0x6C
+#define PS2_8 0x75
+#define PS2_9 0x7D
+#define PS2_0 0x70
+#define PS2_ENTER 0xE05A
+
+
 /* Function Declarations. */
 static void prvDecideTask(void *pvParameters);
 static void prvLEDOutTask(void *pvParameters);
