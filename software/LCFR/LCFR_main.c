@@ -51,8 +51,10 @@ int reconnect_load_timeout = 0;
 int drop_load_timeout = 0;
 int maintenance = 0;
 
-double max_roc_freq = 8;
-double min_freq = 48.5;
+double desired_max_roc_freq = 8;
+double desired_min_freq = 48.5;
+int desired_flag = 0;
+
 double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -113,7 +115,16 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 				inputNumber /= 10;
 			}
 			inputFinalNumber = inputNumber + inputDecimal;
-			printf("Final number was: %f\n", inputFinalNumber);
+			
+			if(desired_flag == 0) {
+				desired_min_freq = inputFinalNumber;
+				printf("The preferred minimum frequency was set to: %f\n", desired_min_freq);
+				desired_flag = 1;
+			} else {
+				desired_max_roc_freq = inputFinalNumber;
+				printf("The preferred maximum rate of change of frequency was set to: %f\n", desired_max_roc_freq);
+				desired_flag = 0;
+			}
 
 			//Clear numbers
 			inputNumber = 0.0;
@@ -319,7 +330,7 @@ static void prvDecideTask(void *pvParameters) {
 
 		// Frequency Load Management
 		if (maintenance == 0) {
-			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) { // If the current system is unstable
+			if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) { // If the current system is unstable
 				if (first_load_shed == 0) { // Drop a load, if we have no dropped loads. First load drop.
 					first_load_shed = 1;
 					drop_load();
