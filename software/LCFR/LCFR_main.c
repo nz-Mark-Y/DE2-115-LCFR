@@ -102,7 +102,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	unsigned char byte;
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
 
-	if(byte == PS2_ENTER) {
+	if (byte == PS2_ENTER) {
 		inputFinalNumber = inputNumber + inputDecimal;
 		printf("Final number was: %d\n", inputFinalNumber);
 
@@ -116,9 +116,9 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		inputNumberCounter = 0;
 	} else {
 		if (byte == PS2_DP) {
-			decimalFlag = 1;
+			inputDecimalFlag = 1;
 		}
-		if (decimalFlag == 0) {
+		if (inputDecimalFlag == 0) {
 			//Take care of upper part of number
 			inputNumber *= 10;
 			
@@ -154,7 +154,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 				case PS2_9:
 					inputNumber += 9.0;
 					break;
-				case default:
+				default:
 					break;
 			}
 		} else {
@@ -193,7 +193,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 				case PS2_9:
 					inputDecimalEquiv += 9.0;
 					break;
-				case default:
+				default:
 					break;
 			}
 
@@ -277,17 +277,18 @@ static void prvDecideTask(void *pvParameters) {
 	while (1) {
 		int switch_value = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 		int masked_switch_value = switch_value & 0x000ff;
-		/*
+
 		int i, k;
 		for (i = 7; i >= 0; i--) {
 			k = masked_switch_value >> i;
-			if (k & 1)
+			if (k & 1) {
 				switches[i] = 1;
-			else
+			}
+			else {
 				switches[i] = 0;
 			}
 		}
-		*/
+
 		if (maintenance == 0) {
 			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
 				if (first_load_shed == 0) {
