@@ -34,8 +34,8 @@
 #define PS2_8 0x75
 #define PS2_9 0x7D
 #define PS2_0 0x70
+#define PS2_dp 0x71
 #define PS2_ENTER 0xE05A
-
 
 /* Function Declarations. */
 static void prvDecideTask(void *pvParameters);
@@ -54,6 +54,8 @@ double min_freq = 48.5;
 double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+int switches[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+unsigned char input[8];
 
 /* Handles. */
 TimerHandle_t timer;
@@ -94,7 +96,6 @@ void freq_relay() {
 void ps2_isr(void* ps2_device, alt_u32 id){
 	unsigned char byte;
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
-	printf("Scan code: %x\n", byte);
 }
 
 /* Function Macros. */
@@ -167,7 +168,17 @@ static void prvDecideTask(void *pvParameters) {
 	while (1) {
 		int switch_value = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 		int masked_switch_value = switch_value & 0x000ff;
-		
+		/*
+		int i, k;
+		for (i = 7; i >= 0; i--) {
+			k = masked_switch_value >> i;
+			if (k & 1)
+				switches[i] = 1;
+			else
+				switches[i] = 0;
+			}
+		}
+		*/
 		if (maintenance == 0) {
 			if (fabs(roc_freq) > max_roc_freq || min_freq > signal_freq) {
 				if (first_load_shed == 0) {
@@ -204,6 +215,7 @@ static void prvDecideTask(void *pvParameters) {
 				shed_flag = 0;
 			}
 		}
+
 		vTaskDelay(20);
 	}
 }
@@ -232,7 +244,12 @@ static void prvLEDOutTask(void *pvParameters)
 			loads_num_rev = loads_num_rev << 1;
 			loads_num_rev = loads_num_rev + rev_loads[i];
 		}
-		IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
+
+		if (maintenance == 0) {
+			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
+		} else {
+			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, 0);
+		}
 		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num_rev);
 
 		vTaskDelay(10);
@@ -243,8 +260,10 @@ static void prvVGAOutTask(void *pvParameters)
 {
 	while (1)
 	{
-		printf("Signal frequency: %f Hz\n", signal_freq);
-		printf("Rate of change: %f\n", roc_freq);
+		if (maintenance == 0) {
+			printf("Signal frequency: %f Hz\n", signal_freq);
+			printf("Rate of change: %f\n", roc_freq);
+		}
 		vTaskDelay(100);
 	}
 }
