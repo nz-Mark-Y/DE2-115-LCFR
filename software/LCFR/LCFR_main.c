@@ -35,8 +35,8 @@ int reconnect_load_timeout = 0;
 int drop_load_timeout = 0;
 int maintenance = 0;
 
-double max_roc_freq = 800838383;
-double min_freq = 50;
+double max_roc_freq = 8;
+double min_freq = 48.5;
 double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -165,7 +165,7 @@ static void prvDecideTask(void *pvParameters) {
 				shed_flag = 0;
 			}
 		}
-		vTaskDelay(10);
+		vTaskDelay(20);
 	}
 }
 
@@ -174,29 +174,28 @@ static void prvLEDOutTask(void *pvParameters)
 	while (1)
 	{
 		int loads_num = 0;
-		int i = 0;
+		int loads_num_rev = 0;
+		int i;
 		
-		//Temporarily copy lower half of load array while overwriting it with upper half to inverse it
-		temp_loads[4];
-		for(i = 0; i < 4; i++)
-		{
-			temp_loads[i] = loads[i];
-			loads[i] = loads[7 - i];
-		}
-
-		//Finish inversing array
-		for(i = 0; i < 4; i++)
-		{
-			loads[7 - i] = temp_loads[i];
+		int rev_loads[8];
+		for (i = 0; i < 8; i++) {
+			if (loads[i] == 0) {
+				rev_loads[i] = 1;
+			} else {
+				rev_loads[i] = 0;
+			}
 		}
 
 		//Translate to binary
-		for (i = 0; i < 8; i++)
-		{
+		for (i = 0; i < 8; i++) {
 			loads_num = loads_num << 1;
 			loads_num = loads_num + loads[i];
+			loads_num_rev = loads_num_rev << 1;
+			loads_num_rev = loads_num_rev + rev_loads[i];
 		}
 		IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
+		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num_rev);
+
 		vTaskDelay(10);
 	}
 }
