@@ -104,7 +104,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 	if (byte == PS2_ENTER) {
 		inputFinalNumber = inputNumber + inputDecimal;
-		printf("Final number was: %d\n", inputFinalNumber);
+		printf("Final number was: %f\n", inputFinalNumber);
 
 		//Clear numbers
 		inputNumber = 0.0;
@@ -220,14 +220,14 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 }
 
 #define reconnect_load() { \
-	if (loads[7] == 0) loads[7] = 1; \
-	else if (loads[6] == 0) loads[6] = 1; \
-	else if (loads[5] == 0) loads[5] = 1; \
-	else if (loads[4] == 0) loads[4] = 1; \
-	else if (loads[3] == 0) loads[3] = 1; \
-	else if (loads[2] == 0) loads[2] = 1; \
-	else if (loads[1] == 0) loads[1] = 1; \
-	else loads[0] = 1; \
+	if ((loads[7] == 0) && (switches[7] == 1)) loads[7] = 1; \
+	else if ((loads[6] == 0) && (switches[6] == 1)) loads[6] = 1; \
+	else if ((loads[5] == 0) && (switches[5] == 1)) loads[5] = 1; \
+	else if ((loads[4] == 0) && (switches[4] == 1)) loads[4] = 1; \
+	else if ((loads[3] == 0) && (switches[3] == 1)) loads[3] = 1; \
+	else if ((loads[2] == 0) && (switches[2] == 1)) loads[2] = 1; \
+	else if ((loads[1] == 0) && (switches[1] == 1)) loads[1] = 1; \
+	else if (switches[0] == 1) loads[0] = 1; \
 }
 
 /* Callbacks. */
@@ -278,15 +278,23 @@ static void prvDecideTask(void *pvParameters) {
 		int switch_value = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 		int masked_switch_value = switch_value & 0x000ff;
 
-		int i, k;
+		int i, k, no_loads_shed = 1;
 		for (i = 7; i >= 0; i--) {
 			k = masked_switch_value >> i;
 			if (k & 1) {
 				switches[i] = 1;
+				if (loads[i] == 0) {
+					no_loads_shed = 0;
+				}
 			}
 			else {
 				switches[i] = 0;
+				loads[i] = 0;
 			}
+		}
+
+		if (no_loads_shed == 1) {
+			first_load_shed = 0;
 		}
 
 		if (maintenance == 0) {
