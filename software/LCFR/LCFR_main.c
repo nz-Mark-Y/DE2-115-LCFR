@@ -79,6 +79,12 @@ double input_number = 0.0, input_decimal = 0.0, input_decimal_equiv = 0.0, input
 int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
 int system_uptime = 0;
+char string[10];
+char m1[5];
+char m2[5];
+char m3[5];
+char m4[5];
+char m5[5];
 
 /* Handles. */
 TimerHandle_t drop_timer;
@@ -517,7 +523,6 @@ static void prvVGAOutTask(void *pvParameters)
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
 
 				//Write dynamic text
-				char string[10];
 				snprintf(string, 10,"%d s",system_uptime);
 				alt_up_char_buffer_string(char_buf, string, 25, 40);
 
@@ -531,9 +536,17 @@ static void prvVGAOutTask(void *pvParameters)
 					alt_up_char_buffer_string(char_buf, "Maintenance    ", 24, 42);
 				}
 
-				char m1[40];
-				snprintf(m1, 10,"%.2f, %.2f, %.2f, %.2f, %.2f", (freq[0], freq[1], freq[2], freq[3], freq[4]));
+				snprintf(m1, 5,"%.2f,", freq[0]);
 				alt_up_char_buffer_string(char_buf, m1, 33, 44);
+				snprintf(m2, 5,"%.2f,", freq[1]);
+				alt_up_char_buffer_string(char_buf, m2, 38, 44);
+				snprintf(m3, 5,"%.2f,", freq[2]);
+				alt_up_char_buffer_string(char_buf, m3, 43, 44);
+				snprintf(m4, 5,"%.2f,", freq[3]);
+				alt_up_char_buffer_string(char_buf, m4, 48, 44);
+				snprintf(m5, 5,"%.2f,", freq[4]);
+				alt_up_char_buffer_string(char_buf, m5, 53, 44);
+
 			}
 		}
 		vTaskDelay(20);
