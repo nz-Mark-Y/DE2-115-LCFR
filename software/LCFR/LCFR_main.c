@@ -303,6 +303,8 @@ int main(void) {
 	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
 	system_up_timer = xTimerCreate("System Uptime Timer", 1000, pdFALSE, NULL, vTimerSystemUptimeCallback);
 
+	xTimerStart(system_up_timer, 0);
+
 	Q_freq_data = xQueueCreate( 100, sizeof(double) );
 
 	// Set up Tasks
