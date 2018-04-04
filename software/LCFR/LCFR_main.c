@@ -521,6 +521,7 @@ static void prvVGAOutTask(void *pvParameters)
 				snprintf(string, 10,"%d",system_uptime);
 				alt_up_char_buffer_string(char_buf, string, 25, 40);
 
+				alt_up_char_buffer_string(char_buf, "               ", 24, 42);
 				if(maintenance == 0) {
 					if(first_load_shed == 0){
 						alt_up_char_buffer_string(char_buf, "Monitoring", 24, 42);
