@@ -536,15 +536,15 @@ static void prvVGAOutTask(void *pvParameters)
 					alt_up_char_buffer_string(char_buf, "Maintenance    ", 24, 42);
 				}
 
-				snprintf(m1, 5,"%.2f,", freq[0]);
+				snprintf(m1, 5,"%f", freq[0]);
 				alt_up_char_buffer_string(char_buf, m1, 33, 44);
-				snprintf(m2, 5,"%.2f,", freq[1]);
+				snprintf(m2, 5,"%f", freq[1]);
 				alt_up_char_buffer_string(char_buf, m2, 38, 44);
-				snprintf(m3, 5,"%.2f,", freq[2]);
+				snprintf(m3, 5,"%f", freq[2]);
 				alt_up_char_buffer_string(char_buf, m3, 43, 44);
-				snprintf(m4, 5,"%.2f,", freq[3]);
+				snprintf(m4, 5,"%f", freq[3]);
 				alt_up_char_buffer_string(char_buf, m4, 48, 44);
-				snprintf(m5, 5,"%.2f,", freq[4]);
+				snprintf(m5, 5,"%f", freq[4]);
 				alt_up_char_buffer_string(char_buf, m5, 53, 44);
 
 			}
