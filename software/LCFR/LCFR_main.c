@@ -1,11 +1,14 @@
-/* Standard includes. */
+/*===========*/
+/* Includes. */
+/*===========*/
+// Standard
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
-/* ISR Includes. */
+// ISR
 #include "system.h"
 #include "altera_avalon_pio_regs.h"
 #include "alt_types.h"
@@ -15,19 +18,23 @@
 #include "altera_up_avalon_video_character_buffer_with_dma.h"
 #include "altera_up_avalon_video_pixel_buffer_dma.h"
 
-/* Scheduler includes. */
+// RTOS
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 
+/*==============*/
 /* Definitions. */
+/*==============*/
+// Tasks
 #define mainREG_DECIDE_PARAMETER    ( ( void * ) 0x12345678 )
 #define mainREG_LED_OUT_PARAMETER   ( ( void * ) 0x87654321 )
 #define mainREG_VGA_OUT_PARAMETER 	( ( void * ) 0x12348765 )
 #define mainREG_TEST_PRIORITY       ( tskIDLE_PRIORITY + 1)
 #define SAMPLE_FREQ 				16000
 
+// Keyboard
 #define PS2_1 0x69
 #define PS2_2 0x72
 #define PS2_3 0x7A
@@ -43,6 +50,7 @@
 #define PS2_DP 0x71
 #define PS2_KEYRELEASE 0xF0
 
+// Graphs
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
 #define FREQPLT_GRID_SIZE_X 5	//pixel separation in the x axis between two data points
 #define FREQPLT_ORI_Y 199.0		//y axis pixel position at the plot origin
@@ -54,23 +62,30 @@
 #define ROCPLT_ROC_RES 0.5		//number of pixels per Hz/s (y axis scale)
 #define MIN_FREQ 45.0 //minimum frequency to draw
 
+/*========================*/
 /* Function Declarations. */
+/*========================*/
 static void prvDecideTask(void *pvParameters);
 static void prvLEDOutTask(void *pvParameters);
 static void prvVGAOutTask(void *pvParameters);
 void translate_ps2(unsigned char byte, double *value);
 
+/*===================*/
 /* Global Variables. */
+/*===================*/
+// Flags
 int first_load_shed = 0;
 int shed_flag = 0;
 int reconnect_load_timeout = 0;
 int drop_load_timeout = 0;
 int maintenance = 0;
-
-double desired_max_roc_freq = 8;
-double desired_min_freq = 48.5;
 int desired_flag = 0;
 
+// Configurations
+double desired_max_roc_freq = 8;
+double desired_min_freq = 48.5;
+
+// Data
 double signal_freq = 0;
 double roc_freq = 0;
 int loads[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -78,21 +93,28 @@ int switches[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 double input_number = 0.0, input_decimal = 0.0, input_decimal_equiv = 0.0, input_final_number = 0.0;
 int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
+// System Status
 int system_uptime = 0;
-char string[10];
-char m1[5], m2[5], m3[5], m4[5], m5[5];
-char n1[5], n2[5], n3[5], n4[5], n5[5];
 double store_freq[5] = { 0, 0, 0, 0, 0 };
 double store_dfreq[5] = { 0, 0, 0, 0, 0 };
+char system_uptime_string[10];
+char min_freq_string[12];
+char max_roc_string[12];
+char m1[5], m2[5], m3[5], m4[5], m5[5];
+char n1[5], n2[5], n3[5], n4[5], n5[5];
 
+/*==========*/
 /* Handles. */
+/*==========*/
 TimerHandle_t drop_timer;
 TimerHandle_t recon_timer;
 TimerHandle_t system_up_timer;
 TaskHandle_t PRVGADraw;
 static QueueHandle_t Q_freq_data;
 
-/* Structs. */
+/*=============*/
+/* Structures. */
+/*=============*/
 typedef struct{
 	unsigned int x1;
 	unsigned int y1;
@@ -100,44 +122,47 @@ typedef struct{
 	unsigned int y2;
 } Line;
 
+/*=======*/
 /* ISRs. */
+/*=======*/
+// Pushbutton
 void button_interrupts_function(void* context, alt_u32 id) {
 	int* temp = (int*) context;
 	(*temp) = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE); // Store which button was pressed
 
-	if (maintenance == 1) {
+	if (maintenance == 1) { // Toggle Maintenance Mode
 		maintenance = 0;
 		printf("Maintenance Mode Disabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
-		alt_up_ps2_disable_read_interrupt(ps2_device);
-	} 
-	else 
-	{
+		alt_up_ps2_disable_read_interrupt(ps2_device); // Disable keyboard
+	} else {
 		maintenance = 1;
 		printf("Maintenance Mode Enabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
-		alt_up_ps2_clear_fifo(ps2_device);
-		alt_up_ps2_enable_read_interrupt(ps2_device);
+		alt_up_ps2_clear_fifo(ps2_device); // Clear keyboard buffer
+		alt_up_ps2_enable_read_interrupt(ps2_device); // Enable keyboard
 	}
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7); // Clear edge capture register
 }
 
+// Frequency Analyser
 void freq_relay() {
 	unsigned int temp = IORD(FREQUENCY_ANALYSER_BASE, 0); // Get the sample count between the two most recent peaks
 
-	//Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
+	// Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
 	if (temp > 0) {
 		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
 		signal_freq = SAMPLE_FREQ / (double) temp;
 	}
 
-	xQueueSendToBackFromISR( Q_freq_data, &signal_freq, pdFALSE );
+	xQueueSendToBackFromISR( Q_freq_data, &signal_freq, pdFALSE ); // Add data to xQueue
 
 	return;
 }
 
+// Keyboard
 void ps2_isr(void* ps2_device, alt_u32 id){
 	unsigned char byte;
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
@@ -163,7 +188,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 				desired_flag = 0;
 			}
 
-			//Clear numbers
+			// Clear numbers
 			input_number = 0.0;
 			input_decimal = 0.0;
 			input_final_number = 0.0;
@@ -178,26 +203,26 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 		if(input_duplicate_flag == 1) {
 			input_duplicate_flag = 0;
 		} else {
-			//Take care of decimal point
+			// Take care of decimal point
 			if (byte == PS2_DP) {
 				input_decimal_flag = 1;
 			}
 
 			if (input_decimal_flag == 0) {
-				//Take care of upper part of number
+				// Take care of upper part of number
 				input_number *= 10;
 				
-				//Translate and add to upper part of number
+				// Translate and add to upper part of number
 				translate_ps2(byte, &input_number);
 			} else {
-				//Take care of lower part of number
+				// Take care of lower part of number
 				input_number_counter += 1;
 				input_decimal_equiv *= 10;
 
-				//Translate and add to lower part of number
+				// Translate and add to lower part of number
 				translate_ps2(byte, &input_decimal_equiv);
 
-				//Convert to 'normal' decimal
+				// Convert to 'normal' decimal
 				int i = 0;
 				input_decimal = input_decimal_equiv;
 				for(i = 0; i < input_number_counter; i++) {
@@ -208,7 +233,9 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	}
 }
 
+/*==================*/
 /* Function Macros. */
+/*==================*/
 #define drop_load() { \
 	if (loads[0] == 1) loads[0] = 0; \
 	else if (loads[1] == 1) loads[1] = 0; \
@@ -230,8 +257,9 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	else if ((loads[1] == 0) && (switches[1] == 1)) loads[1] = 1; \
 	else if (switches[0] == 1) loads[0] = 1; \
 }
-
+/*============*/
 /* Functions. */
+/*============*/
 void translate_ps2(unsigned char byte, double *value) {
 	switch(byte) {
 		case PS2_0:
@@ -269,7 +297,9 @@ void translate_ps2(unsigned char byte, double *value) {
 	}
 }
 
+/*============*/
 /* Callbacks. */
+/*============*/
 void vTimerDropCallback(xTimerHandle t_timer) {
 	drop_load_timeout = 1;
 }
@@ -281,8 +311,9 @@ void vTimerReconnectCallback(xTimerHandle t_timer) {
 void vTimerSystemUptimeCallback(xTimerHandle t_timer){
 	system_uptime += 1;
 }
-
+/*================*/
 /* Main function. */
+/*================*/
 int main(void) {
 	// Set up Interrupts
 	int button_value = 0;
@@ -324,7 +355,10 @@ int main(void) {
 	for(;;);
 }
 
+/*========*/
 /* Tasks. */
+/*========*/
+// Decision Task
 static void prvDecideTask(void *pvParameters) {
 	while (1) {
 		// Switch Load Management
@@ -392,8 +426,8 @@ static void prvDecideTask(void *pvParameters) {
 	}
 }
 
-static void prvLEDOutTask(void *pvParameters)
-{
+// LED Output Task
+static void prvLEDOutTask(void *pvParameters) {
 	while (1) {
 		int loads_num = 0;
 		int loads_num_rev = 0;
@@ -425,6 +459,7 @@ static void prvLEDOutTask(void *pvParameters)
 		}
 		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num);
 		
+		// Compute VGA data
 		for (i = 4; i >= 1; i--) {
 			store_freq[i] = store_freq[i-1];
 			store_dfreq[i] = store_dfreq[i-1];
@@ -444,13 +479,18 @@ static void prvLEDOutTask(void *pvParameters)
 		snprintf(n4, 5,"%f", store_dfreq[3]);
 		snprintf(n5, 5,"%f", store_dfreq[4]);
 		
+		snprintf(system_uptime_string, 10,"%d s",system_uptime);
+
+		snprintf(min_freq_string, 12, "%.1f Hz  ", desired_min_freq);
+		snprintf(max_roc_string, 12, "%.1f Hz/s  ", desired_max_roc_freq);
+
 		vTaskDelay(10);
 	}
 }
 
-static void prvVGAOutTask(void *pvParameters)
-{
-	//initialize VGA controllers
+// VGA Output Task
+static void prvVGAOutTask(void *pvParameters) {
+	// Initialize VGA controllers
 	alt_up_pixel_buffer_dma_dev *pixel_buf;
 	pixel_buf = alt_up_pixel_buffer_dma_open_dev(VIDEO_PIXEL_BUFFER_DMA_NAME);
 	if (pixel_buf == NULL) {
@@ -465,7 +505,7 @@ static void prvVGAOutTask(void *pvParameters)
 	}
 	alt_up_char_buffer_clear(char_buf);
 
-	//Set up plot axes
+	// Set up plot axes
 	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 	alt_up_pixel_buffer_dma_draw_vline(pixel_buf, 100, 50, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
@@ -484,11 +524,17 @@ static void prvVGAOutTask(void *pvParameters)
 	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
-	//Write static text
+	// Write static text
+	alt_up_char_buffer_string(char_buf, "Frequency Relay System v1.4", 28, 2);
 	alt_up_char_buffer_string(char_buf, "System uptime: ", 10, 40);
 	alt_up_char_buffer_string(char_buf, "Current mode: ", 10, 42);
 	alt_up_char_buffer_string(char_buf, "Latest 5 frequency measurements: ", 10, 44);
 	alt_up_char_buffer_string(char_buf, "Latest 5 df/dt measurements: ", 10, 46);
+	alt_up_char_buffer_string(char_buf, "Minimum Allowable Frequency: ", 10, 48);
+	alt_up_char_buffer_string(char_buf, "Maximum Allowable Frequency ROC: ", 10, 50);
+	alt_up_char_buffer_string(char_buf, "Minimum Time Taken: ", 10, 52);
+	alt_up_char_buffer_string(char_buf, "Maximum Time Taken: ", 10, 54);
+	alt_up_char_buffer_string(char_buf, "Average Time Taken: ", 10, 56);
 
 
 	double freq[100], dfreq[100];
@@ -496,11 +542,11 @@ static void prvVGAOutTask(void *pvParameters)
 	Line line_freq, line_roc;
 
 	while(1){
-		//receive frequency data from queue
+		// Receive frequency data from queue
 		while(uxQueueMessagesWaiting( Q_freq_data ) != 0){
 			xQueueReceive( Q_freq_data, freq+i, 0 );
 
-			//calculate frequency RoC
+			// Calculate frequency RoC
 			if(i==0){
 				dfreq[0] = (freq[0]-freq[99]) * 2.0 * freq[0] * freq[99] / (freq[0]+freq[99]);
 			}
@@ -512,38 +558,37 @@ static void prvVGAOutTask(void *pvParameters)
 				dfreq[i] = 100.0;
 			}
 
-			i =	++i%100; //point to the next data (oldest) to be overwritten
+			i =	++i%100; // Point to the next data (oldest) to be overwritten
 
 		}
 
-		//clear old graph to draw new graph
+		// Clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 201, 639, 299, 0, 0);
 
-		for (j = 0; j < 99; ++j) { //i here points to the oldest data, j loops through all the data to be drawn on VGA
+		for (j = 0; j < 99; ++j) { // i here points to the oldest data, j loops through all the data to be drawn on VGA
 			if (((int)(freq[(i+j)%100]) > MIN_FREQ) && ((int)(freq[(i+j+1)%100]) > MIN_FREQ)){
-				//Calculate coordinates of the two data points to draw a line in between
-				//Frequency plot
+				// Calculate coordinates of the two data points to draw a line in between
+				// Frequency plot
 				line_freq.x1 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * j;
 				line_freq.y1 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j)%100] - MIN_FREQ));
 
 				line_freq.x2 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * (j + 1);
 				line_freq.y2 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j+1)%100] - MIN_FREQ));
 
-				//Frequency RoC plot
+				// Frequency RoC plot
 				line_roc.x1 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * j;
 				line_roc.y1 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j)%100]);
 
 				line_roc.x2 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * (j + 1);
 				line_roc.y2 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j+1)%100]);
 
-				//Draw
+				// Draw
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_freq.x1, line_freq.y1, line_freq.x2, line_freq.y2, 0x3ff << 0, 0);
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
 
-				//Write dynamic text
-				snprintf(string, 10,"%d s",system_uptime);
-				alt_up_char_buffer_string(char_buf, string, 25, 40);
+				// Write dynamic text
+				alt_up_char_buffer_string(char_buf, system_uptime_string, 25, 40);
 
 				if (maintenance == 0) {
 					if (first_load_shed == 0) {
@@ -566,6 +611,9 @@ static void prvVGAOutTask(void *pvParameters)
 				alt_up_char_buffer_string(char_buf, n3, 49, 46);
 				alt_up_char_buffer_string(char_buf, n4, 54, 46);
 				alt_up_char_buffer_string(char_buf, n5, 59, 46);
+
+				alt_up_char_buffer_string(char_buf, min_freq_string, 39, 48);
+				alt_up_char_buffer_string(char_buf, max_roc_string, 43, 50);
 			}
 		}
 		vTaskDelay(20);
