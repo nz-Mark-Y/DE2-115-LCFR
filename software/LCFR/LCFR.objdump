@@ -31,49 +31,49 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   7 .debug_aranges 00000e88  00000000  00000000  0001b690  2**3
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_pubnames 000025df  00000000  00000000  0001c518  2**0
+  8 .debug_pubnames 000025eb  00000000  00000000  0001c518  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_info   0002f9af  00000000  00000000  0001eaf7  2**0
+  9 .debug_info   0002f9ba  00000000  00000000  0001eb03  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_abbrev 00009708  00000000  00000000  0004e4a6  2**0
+ 10 .debug_abbrev 000096f9  00000000  00000000  0004e4bd  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_line   0001adaa  00000000  00000000  00057bae  2**0
+ 11 .debug_line   0001adaa  00000000  00000000  00057bb6  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_frame  00002f20  00000000  00000000  00072958  2**2
+ 12 .debug_frame  00002f20  00000000  00000000  00072960  2**2
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_str    00002ab3  00000000  00000000  00075878  2**0
+ 13 .debug_str    00002ab3  00000000  00000000  00075880  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_loc    0000deda  00000000  00000000  0007832b  2**0
+ 14 .debug_loc    0000deda  00000000  00000000  00078333  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_alt_sim_info 00000050  00000000  00000000  00086208  2**2
+ 15 .debug_alt_sim_info 00000050  00000000  00000000  00086210  2**2
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_ranges 00000950  00000000  00000000  00086258  2**3
+ 16 .debug_ranges 00000950  00000000  00000000  00086260  2**3
                   CONTENTS, READONLY, DEBUGGING
- 17 .thread_model 00000003  00000000  00000000  0008c403  2**0
+ 17 .thread_model 00000003  00000000  00000000  0008c417  2**0
                   CONTENTS, READONLY
- 18 .cpu          00000005  00000000  00000000  0008c406  2**0
+ 18 .cpu          00000005  00000000  00000000  0008c41a  2**0
                   CONTENTS, READONLY
- 19 .qsys         00000001  00000000  00000000  0008c40b  2**0
+ 19 .qsys         00000001  00000000  00000000  0008c41f  2**0
                   CONTENTS, READONLY
- 20 .simulation_enabled 00000001  00000000  00000000  0008c40c  2**0
+ 20 .simulation_enabled 00000001  00000000  00000000  0008c420  2**0
                   CONTENTS, READONLY
- 21 .sysid_hash   00000004  00000000  00000000  0008c40d  2**0
+ 21 .sysid_hash   00000004  00000000  00000000  0008c421  2**0
                   CONTENTS, READONLY
- 22 .sysid_base   00000004  00000000  00000000  0008c411  2**0
+ 22 .sysid_base   00000004  00000000  00000000  0008c425  2**0
                   CONTENTS, READONLY
- 23 .sysid_time   00000004  00000000  00000000  0008c415  2**0
+ 23 .sysid_time   00000004  00000000  00000000  0008c429  2**0
                   CONTENTS, READONLY
- 24 .stderr_dev   00000009  00000000  00000000  0008c419  2**0
+ 24 .stderr_dev   00000009  00000000  00000000  0008c42d  2**0
                   CONTENTS, READONLY
- 25 .stdin_dev    00000009  00000000  00000000  0008c422  2**0
+ 25 .stdin_dev    00000009  00000000  00000000  0008c436  2**0
                   CONTENTS, READONLY
- 26 .stdout_dev   00000009  00000000  00000000  0008c42b  2**0
+ 26 .stdout_dev   00000009  00000000  00000000  0008c43f  2**0
                   CONTENTS, READONLY
- 27 .sopc_system_name 00000005  00000000  00000000  0008c434  2**0
+ 27 .sopc_system_name 00000005  00000000  00000000  0008c448  2**0
                   CONTENTS, READONLY
- 28 .quartus_project_dir 0000003c  00000000  00000000  0008c439  2**0
+ 28 .quartus_project_dir 0000003c  00000000  00000000  0008c44d  2**0
                   CONTENTS, READONLY
- 29 .sopcinfo     000b3e3a  00000000  00000000  0008c475  2**0
+ 29 .sopcinfo     000b3e3a  00000000  00000000  0008c489  2**0
                   CONTENTS, READONLY
 SYMBOL TABLE:
 01000000 l    d  .entry	00000000 .entry
@@ -370,7 +370,6 @@ SYMBOL TABLE:
 00010b44 g     F .text	000002c0 alt_flash_cfi_write
 00000c9c g     F .text	0000003c xEventGroupGetBitsFromISR
 0000f768 g     F .text	00000088 __eqdf2
-08002708 g     O .bss	00000008 inputDecimal
 0807fbe8 g       *ABS*	00000000 __alt_heap_start
 000048fc g     F .text	000000b0 xTimerCreate
 00007a00 g     F .text	00000044 printf
@@ -383,6 +382,7 @@ SYMBOL TABLE:
 0000b768 g     F .text	00000068 __sfmoreglue
 0001025c g     F .text	00000020 __malloc_unlock
 00015070 g     F .text	000000b0 alt_up_ps2_read_data_byte_timeout
+08002708 g     O .bss	00000008 input_decimal
 0001543c g     F .text	000000d0 alt_up_char_buffer_draw
 000008f0 g     F .text	00000184 xEventGroupSync
 0000cd98 g     F .text	000000e0 memmove
@@ -396,6 +396,7 @@ SYMBOL TABLE:
 0000700c g     F .text	00000088 __gtdf2
 00000000  w      *UND*	00000000 __errno
 00011558 g     F .text	00000048 alt_write_flash_command_32bit_device_16bit_mode
+08002710 g     O .bss	00000008 input_decimal_equiv
 01000000 g     F .entry	00000000 __reset
 00001d78 g     F .text	00000094 xQueueGiveMutexRecursive
 08002694 g     O .bss	00000004 pxCurrentTCB
@@ -407,6 +408,7 @@ SYMBOL TABLE:
 0800a5fc g       *ABS*	00000000 _gp
 0001612c g     F .text	00000030 usleep
 00000a74 g     F .text	000001c0 xEventGroupWaitBits
+08002724 g     O .bss	00000004 input_decimal_flag
 0800108c g     O .rwdata	00000180 alt_fd_list
 080026e8 g     O .bss	00000004 maintenance
 000017dc g     F .text	00000038 xPortStartScheduler
@@ -427,12 +429,12 @@ SYMBOL TABLE:
 00000290 g     F .text	00000140 xCoRoutineCreate
 0000d1d4 g     F .text	000000b0 __ratio
 01000000 g       *ABS*	00000000 __alt_mem_flash_controller
+08002720 g     O .bss	00000004 input_number_counter
 00012e34 g     F .text	00000224 altera_avalon_jtag_uart_read
 00000000  w      *UND*	00000000 malloc
 00007a44 g     F .text	00000034 _printf_r
 0000fc94 g     F .text	00000008 __udivsi3
 0000ff60 g     F .text	000000c0 isatty
-08002700 g     O .bss	00000008 inputNumber
 08000380 g     O .rodata	000000c8 __mprec_tens
 00003d50 g     F .text	00000070 uxTaskGetStackHighWaterMark
 080026d8 g     O .bss	00000004 first_load_shed
@@ -471,6 +473,7 @@ SYMBOL TABLE:
 00000cd8 g     F .text	0000018c xEventGroupSetBits
 0000de6c g     F .text	000005f4 _realloc_r
 0807fbe8 g       *ABS*	00000000 __bss_end
+08002700 g     O .bss	00000008 input_number
 00016020 g     F .text	0000010c alt_tick
 0000ebdc g     F .text	000005dc __udivdi3
 08000448 g     O .rodata	00000028 __mprec_bigtens
@@ -497,7 +500,6 @@ SYMBOL TABLE:
 0000cea0 g     F .text	00000070 __hi0bits
 0000fa80 g     F .text	000000d8 __fixdfsi
 00004018 g     F .text	000000fc xTaskPriorityDisinherit
-08002724 g     O .bss	00000004 inputDecimalFlag
 00011414 g     F .text	0000003c alt_write_flash_command_8bit_device_8bit_mode
 00000000 g       *ABS*	00000000 __alt_mem_onchip_memory
 0800263c g     O .rwdata	00000008 alt_dev_list
@@ -568,7 +570,6 @@ SYMBOL TABLE:
 000127f0 g     F .text	00000058 altera_avalon_jtag_uart_read_fd
 00016c88 g     F .text	000000b8 alt_get_fd
 000035bc g     F .text	00000060 vTaskPlaceOnEventListRestricted
-08002728 g     O .bss	00000004 inputDuplicateFlag
 00016a3c g     F .text	0000012c alt_busy_sleep
 0000778c g     F .text	000000c8 __fpcmp_parts_d
 0000e874 g     F .text	00000070 _close_r
@@ -578,7 +579,6 @@ SYMBOL TABLE:
 000128a0 g     F .text	00000048 altera_avalon_jtag_uart_close_fd
 0807fbe8 g       *ABS*	00000000 __alt_stack_base
 000128e8 g     F .text	00000050 altera_avalon_jtag_uart_ioctl_fd
-08002710 g     O .bss	00000008 inputDecimalEquiv
 000049ac g     F .text	000000c8 xTimerGenericCommand
 00009ac8 g     F .text	0000013c __swsetup_r
 00011f68 g     F .text	000007ac alt_read_cfi_width
@@ -602,7 +602,6 @@ SYMBOL TABLE:
 0000e7c0 g     F .text	000000b4 _calloc_r
 08002658 g     O .rwdata	00000008 alt_flash_dev_list
 00011514 g     F .text	00000044 alt_write_flash_command_16bit_device_16bit_mode
-08002720 g     O .bss	00000004 inputNumberCounter
 0800266c g       *ABS*	00000000 __bss_start
 00007968 g     F .text	00000098 memset
 00005ac4 g     F .text	00000168 main
@@ -679,7 +678,6 @@ SYMBOL TABLE:
 00012d40 g     F .text	000000f4 altera_avalon_jtag_uart_ioctl
 000011f0 g     F .text	0000001c vPortInitialiseBlocks
 000050c0 g     F .text	0000004c xTimerIsTimerActive
-08002718 g     O .bss	00000008 inputFinalNumber
 0000e5b0 g     F .text	0000007c __swrite
 0800262c g     O .rwdata	00000004 __malloc_trim_threshold
 0001615c g     F .text	00000020 altera_nios2_qsys_irq_init
@@ -718,6 +716,7 @@ SYMBOL TABLE:
 080026dc g     O .bss	00000004 shed_flag
 000037d4 g     F .text	00000038 vTaskSetTimeOutState
 0800264c g     O .rwdata	00000004 alt_priority_mask
+08002718 g     O .bss	00000008 input_final_number
 00009aa4 g     F .text	00000024 __vfprintf_internal
 000147c0 g     F .text	00000230 altera_avalon_uart_read
 000026a4 g     F .text	00000030 uxQueueMessagesWaitingFromISR
@@ -733,6 +732,7 @@ SYMBOL TABLE:
 0001617c g     F .text	00000068 alt_program_amd
 0000477c g     F .text	00000110 vTaskNotifyGiveFromISR
 00007340 g     F .text	00000314 __pack_d
+08002728 g     O .bss	00000004 input_duplicate_flag
 00000f0c g     F .text	00000038 vEventGroupClearBitsCallback
 000021a8 g     F .text	000000d8 xQueueGiveFromISR
 00000000  w      *UND*	00000000 free
@@ -11268,19 +11268,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5398:	10803fcc 	andi	r2,r2,255
     539c:	10801698 	cmpnei	r2,r2,90
     53a0:	10007c1e 	bne	r2,zero,5594 <ps2_isr+0x224>
-		if(inputDuplicateFlag == 1) {
+		if(input_duplicate_flag == 1) {
     53a4:	d0a04b17 	ldw	r2,-32468(gp)
     53a8:	10800058 	cmpnei	r2,r2,1
     53ac:	1000021e 	bne	r2,zero,53b8 <ps2_isr+0x48>
-			inputDuplicateFlag = 0;
+			input_duplicate_flag = 0;
     53b0:	d0204b15 	stw	zero,-32468(gp)
     53b4:	0000dc06 	br	5728 <ps2_isr+0x3b8>
 		} else {
-			if(inputDecimalFlag == 1) {
+			if(input_decimal_flag == 1) {
     53b8:	d0a04a17 	ldw	r2,-32472(gp)
     53bc:	10800058 	cmpnei	r2,r2,1
     53c0:	1000121e 	bne	r2,zero,540c <ps2_isr+0x9c>
-				inputDecimal *= 10;
+				input_decimal *= 10;
     53c4:	d0a04317 	ldw	r2,-32500(gp)
     53c8:	01020034 	movhi	r4,2048
     53cc:	2109c304 	addi	r4,r4,9996
@@ -11300,7 +11300,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5404:	20c00015 	stw	r3,0(r4)
     5408:	00001106 	br	5450 <ps2_isr+0xe0>
 			} else {
-				inputNumber /= 10;
+				input_number /= 10;
     540c:	d0a04117 	ldw	r2,-32508(gp)
     5410:	01020034 	movhi	r4,2048
     5414:	2109c104 	addi	r4,r4,9988
@@ -11319,7 +11319,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5448:	2109c104 	addi	r4,r4,9988
     544c:	20c00015 	stw	r3,0(r4)
 			}
-			inputFinalNumber = inputNumber + inputDecimal;
+			input_final_number = input_number + input_decimal;
     5450:	d1604117 	ldw	r5,-32508(gp)
     5454:	00820034 	movhi	r2,2048
     5458:	1089c104 	addi	r2,r2,9988
@@ -11346,7 +11346,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     54a4:	d0a03c17 	ldw	r2,-32528(gp)
     54a8:	1004c03a 	cmpne	r2,r2,zero
     54ac:	1000141e 	bne	r2,zero,5500 <ps2_isr+0x190>
-				desired_min_freq = inputFinalNumber;
+				desired_min_freq = input_final_number;
     54b0:	d0a04717 	ldw	r2,-32484(gp)
     54b4:	01020034 	movhi	r4,2048
     54b8:	2109c704 	addi	r4,r4,10012
@@ -11370,7 +11370,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     54f8:	d0a03c15 	stw	r2,-32528(gp)
     54fc:	00001206 	br	5548 <ps2_isr+0x1d8>
 			} else {
-				desired_max_roc_freq = inputFinalNumber;
+				desired_max_roc_freq = input_final_number;
     5500:	d0a04717 	ldw	r2,-32484(gp)
     5504:	01020034 	movhi	r4,2048
     5508:	2109c704 	addi	r4,r4,10012
@@ -11394,30 +11394,30 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 			}
 
 			//Clear numbers
-			inputNumber = 0.0;
+			input_number = 0.0;
     5548:	d0204115 	stw	zero,-32508(gp)
     554c:	00820034 	movhi	r2,2048
     5550:	1089c104 	addi	r2,r2,9988
     5554:	10000015 	stw	zero,0(r2)
-			inputDecimal = 0.0;
+			input_decimal = 0.0;
     5558:	d0204315 	stw	zero,-32500(gp)
     555c:	00820034 	movhi	r2,2048
     5560:	1089c304 	addi	r2,r2,9996
     5564:	10000015 	stw	zero,0(r2)
-			inputFinalNumber = 0.0;
+			input_final_number = 0.0;
     5568:	d0204715 	stw	zero,-32484(gp)
     556c:	00820034 	movhi	r2,2048
     5570:	1089c704 	addi	r2,r2,10012
     5574:	10000015 	stw	zero,0(r2)
-			inputDecimalEquiv = 0.0;
+			input_decimal_equiv = 0.0;
     5578:	d0204515 	stw	zero,-32492(gp)
     557c:	00820034 	movhi	r2,2048
     5580:	1089c504 	addi	r2,r2,10004
     5584:	10000015 	stw	zero,0(r2)
 
-			inputDecimalFlag = 0;
+			input_decimal_flag = 0;
     5588:	d0204a15 	stw	zero,-32472(gp)
-			inputNumberCounter = 0;
+			input_number_counter = 0;
     558c:	d0204915 	stw	zero,-32476(gp)
     5590:	00006506 	br	5728 <ps2_isr+0x3b8>
 		}
@@ -11426,17 +11426,16 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5598:	10803fcc 	andi	r2,r2,255
     559c:	10803c18 	cmpnei	r2,r2,240
     55a0:	1000031e 	bne	r2,zero,55b0 <ps2_isr+0x240>
-		inputDuplicateFlag = 1;	
+		input_duplicate_flag = 1;
     55a4:	00800044 	movi	r2,1
     55a8:	d0a04b15 	stw	r2,-32468(gp)
     55ac:	00005e06 	br	5728 <ps2_isr+0x3b8>
 	} else {
-		
-		if(inputDuplicateFlag == 1) {
+		if(input_duplicate_flag == 1) {
     55b0:	d0a04b17 	ldw	r2,-32468(gp)
     55b4:	10800058 	cmpnei	r2,r2,1
     55b8:	1000021e 	bne	r2,zero,55c4 <ps2_isr+0x254>
-			inputDuplicateFlag = 0;
+			input_duplicate_flag = 0;
     55bc:	d0204b15 	stw	zero,-32468(gp)
     55c0:	00005906 	br	5728 <ps2_isr+0x3b8>
 		} else {
@@ -11446,17 +11445,17 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     55c8:	10803fcc 	andi	r2,r2,255
     55cc:	10801c58 	cmpnei	r2,r2,113
     55d0:	1000021e 	bne	r2,zero,55dc <ps2_isr+0x26c>
-				inputDecimalFlag = 1;
+				input_decimal_flag = 1;
     55d4:	00800044 	movi	r2,1
     55d8:	d0a04a15 	stw	r2,-32472(gp)
 			}
 
-			if (inputDecimalFlag == 0) {
+			if (input_decimal_flag == 0) {
     55dc:	d0a04a17 	ldw	r2,-32472(gp)
     55e0:	1004c03a 	cmpne	r2,r2,zero
     55e4:	1000161e 	bne	r2,zero,5640 <ps2_isr+0x2d0>
 				//Take care of upper part of number
-				inputNumber *= 10;
+				input_number *= 10;
     55e8:	d0a04117 	ldw	r2,-32508(gp)
     55ec:	01020034 	movhi	r4,2048
     55f0:	2109c104 	addi	r4,r4,9988
@@ -11476,20 +11475,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5628:	20c00015 	stw	r3,0(r4)
 				
 				//Translate and add to upper part of number
-				translate_ps2(byte, &inputNumber);
+				translate_ps2(byte, &input_number);
     562c:	e0bffd03 	ldbu	r2,-12(fp)
     5630:	11003fcc 	andi	r4,r2,255
     5634:	d1604104 	addi	r5,gp,-32508
     5638:	000573c0 	call	573c <translate_ps2>
     563c:	00003a06 	br	5728 <ps2_isr+0x3b8>
-
 			} else {
 				//Take care of lower part of number
-				inputNumberCounter += 1;
+				input_number_counter += 1;
     5640:	d0a04917 	ldw	r2,-32476(gp)
     5644:	10800044 	addi	r2,r2,1
     5648:	d0a04915 	stw	r2,-32476(gp)
-				inputDecimalEquiv *= 10;
+				input_decimal_equiv *= 10;
     564c:	d0a04517 	ldw	r2,-32492(gp)
     5650:	01020034 	movhi	r4,2048
     5654:	2109c504 	addi	r4,r4,10004
@@ -11509,7 +11507,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     568c:	20c00015 	stw	r3,0(r4)
 
 				//Translate and add to lower part of number
-				translate_ps2(byte, &inputDecimalEquiv);
+				translate_ps2(byte, &input_decimal_equiv);
     5690:	e0bffd03 	ldbu	r2,-12(fp)
     5694:	11003fcc 	andi	r4,r2,255
     5698:	d1604504 	addi	r5,gp,-32492
@@ -11518,7 +11516,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 				//Convert to 'normal' decimal
 				int i = 0;
     56a0:	e03ffc15 	stw	zero,-16(fp)
-				inputDecimal = inputDecimalEquiv;
+				input_decimal = input_decimal_equiv;
     56a4:	d0a04517 	ldw	r2,-32492(gp)
     56a8:	01020034 	movhi	r4,2048
     56ac:	2109c504 	addi	r4,r4,10004
@@ -11527,10 +11525,10 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     56b8:	01020034 	movhi	r4,2048
     56bc:	2109c304 	addi	r4,r4,9996
     56c0:	20c00015 	stw	r3,0(r4)
-				for(i = 0; i < inputNumberCounter; i++) {
+				for(i = 0; i < input_number_counter; i++) {
     56c4:	e03ffc15 	stw	zero,-16(fp)
     56c8:	00001406 	br	571c <ps2_isr+0x3ac>
-					inputDecimal /= 10.0;
+					input_decimal /= 10.0;
     56cc:	d0a04317 	ldw	r2,-32500(gp)
     56d0:	01020034 	movhi	r4,2048
     56d4:	2109c304 	addi	r4,r4,9996
@@ -11548,19 +11546,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     5704:	01020034 	movhi	r4,2048
     5708:	2109c304 	addi	r4,r4,9996
     570c:	20c00015 	stw	r3,0(r4)
-				translate_ps2(byte, &inputDecimalEquiv);
+				translate_ps2(byte, &input_decimal_equiv);
 
 				//Convert to 'normal' decimal
 				int i = 0;
-				inputDecimal = inputDecimalEquiv;
-				for(i = 0; i < inputNumberCounter; i++) {
+				input_decimal = input_decimal_equiv;
+				for(i = 0; i < input_number_counter; i++) {
     5710:	e0bffc17 	ldw	r2,-16(fp)
     5714:	10800044 	addi	r2,r2,1
     5718:	e0bffc15 	stw	r2,-16(fp)
     571c:	d0e04917 	ldw	r3,-32476(gp)
     5720:	e0bffc17 	ldw	r2,-16(fp)
     5724:	10ffe916 	blt	r2,r3,56cc <ps2_isr+0x35c>
-					inputDecimal /= 10.0;
+					input_decimal /= 10.0;
 				}
 			}
 		}
@@ -12626,10 +12624,10 @@ static void prvLEDOutTask(void *pvParameters)
     6430:	d0a03b17 	ldw	r2,-32532(gp)
     6434:	1004c03a 	cmpne	r2,r2,zero
     6438:	1000051e 	bne	r2,zero,6450 <prvLEDOutTask+0x148>
-			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
+			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num_rev);
     643c:	00c00134 	movhi	r3,4
     6440:	18cc2004 	addi	r3,r3,12416
-    6444:	e0bff617 	ldw	r2,-40(fp)
+    6444:	e0bff517 	ldw	r2,-44(fp)
     6448:	18800035 	stwio	r2,0(r3)
     644c:	00000306 	br	645c <prvLEDOutTask+0x154>
 		} else {
@@ -12638,10 +12636,10 @@ static void prvLEDOutTask(void *pvParameters)
     6454:	108c2004 	addi	r2,r2,12416
     6458:	10000035 	stwio	zero,0(r2)
 		}
-		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num_rev);
+		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num);
     645c:	00c00134 	movhi	r3,4
     6460:	18cc1804 	addi	r3,r3,12384
-    6464:	e0bff517 	ldw	r2,-44(fp)
+    6464:	e0bff617 	ldw	r2,-40(fp)
     6468:	18800035 	stwio	r2,0(r3)
 
 		vTaskDelay(10);

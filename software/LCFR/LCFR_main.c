@@ -370,11 +370,11 @@ static void prvLEDOutTask(void *pvParameters)
 
 		// Write to LEDs base
 		if (maintenance == 0) {
-			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num);
+			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, loads_num_rev);
 		} else {
 			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, 0);
 		}
-		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num_rev);
+		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num);
 
 		vTaskDelay(10);
 	}
