@@ -109,7 +109,6 @@ char n1[5], n2[5], n3[5], n4[5], n5[5];
 TimerHandle_t drop_timer;
 TimerHandle_t recon_timer;
 TimerHandle_t system_up_timer;
-TaskHandle_t PRVGADraw;
 static QueueHandle_t Q_freq_data;
 
 /*=============*/
@@ -311,6 +310,7 @@ void vTimerReconnectCallback(xTimerHandle t_timer) {
 void vTimerSystemUptimeCallback(xTimerHandle t_timer){
 	system_uptime += 1;
 }
+
 /*================*/
 /* Main function. */
 /*================*/
@@ -372,6 +372,9 @@ static void prvDecideTask(void *pvParameters) {
 				switches[7-i] = 1;
 				if (loads[7-i] == 0) {
 					no_loads_shed = 0;
+				}
+				if (maintenance == 1) {
+					loads[7-i] = 1;
 				}
 			} else { // If the switch at this position is off
 				switches[7-i] = 0;
