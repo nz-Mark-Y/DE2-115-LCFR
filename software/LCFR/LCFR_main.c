@@ -52,7 +52,7 @@
 #define ROCPLT_GRID_SIZE_X 5
 #define ROCPLT_ORI_Y 259.0
 #define ROCPLT_ROC_RES 0.5		//number of pixels per Hz/s (y axis scale)
-#define MIN_FREQ 25.0 //minimum frequency to draw
+#define MIN_FREQ 45.0 //minimum frequency to draw
 
 /* Function Declarations. */
 static void prvDecideTask(void *pvParameters);
@@ -503,6 +503,6 @@ static void prvVGAOutTask(void *pvParameters)
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
 			}
 		}
-		vTaskDelay(40);
+		vTaskDelay(20);
 	}
 }
