@@ -514,7 +514,9 @@ static void prvVGAOutTask(void *pvParameters)
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
 
 				//Write dynamic text
-				alt_up_char_buffer_string(char_buf, "System uptime:", 25, 40);
+				char string[10];
+				snprintf(string, 10,"%d",system_uptime);
+				alt_up_char_buffer_string(char_buf, string, 25, 40);
 			}
 		}
 		vTaskDelay(20);
