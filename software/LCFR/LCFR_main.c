@@ -82,6 +82,8 @@ int system_uptime = 0;
 char string[10];
 char m1[5], m2[5], m3[5], m4[5], m5[5];
 char n1[5], n2[5], n3[5], n4[5], n5[5];
+double store_freq[5] = { 0, 0, 0, 0, 0 };
+double store_dfreq[5] = { 0, 0, 0, 0, 0 };
 
 /* Handles. */
 TimerHandle_t drop_timer;
@@ -423,36 +425,24 @@ static void prvLEDOutTask(void *pvParameters)
 		}
 		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num);
 		
-
-		//Process latest 5 values
-		double freq[5], dfreq[5];
-		int i = 4;
-		//Receive frequency data from queue
-		while(uxQueueMessagesWaiting( Q_freq_data ) != 0){
-			xQueueReceive( Q_freq_data, freq+i, 0 );
-
-			//calculate frequency RoC
-			if(i==0){
-				dfreq[0] = (freq[0]-freq[99]) * 2.0 * freq[0] * freq[99] / (freq[0]+freq[99]);
-			} else {
-				dfreq[i] = (freq[i]-freq[i-1]) * 2.0 * freq[i]* freq[i-1] / (freq[i]+freq[i-1]);
-			}
-			if (dfreq[i] > 100.0){
-				dfreq[i] = 100.0;
-			}
-			i =	++i%100; //point to the next data (oldest) to be overwritten
+		for (i = 4; i >= 1; i--) {
+			store_freq[i] = store_freq[i-1];
+			store_dfreq[i] = store_dfreq[i-1];
 		}
-		snprintf(m1, 5,"%f", freq[0]);
-		snprintf(m2, 5,"%f", freq[1]);
-		snprintf(m3, 5,"%f", freq[2]);
-		snprintf(m4, 5,"%f", freq[3]);
-		snprintf(m5, 5,"%f", freq[4]);
+		store_freq[0] = signal_freq;
+		store_dfreq[0] = roc_freq;
 
-		snprintf(n1, 5,"%f", dfreq[0]);
-		snprintf(n2, 5,"%f", dfreq[1]);
-		snprintf(n3, 5,"%f", dfreq[2]);
-		snprintf(n4, 5,"%f", dfreq[3]);
-		snprintf(n5, 5,"%f", dfreq[4]);
+		snprintf(m1, 5,"%f", store_freq[0]);
+		snprintf(m2, 5,"%f", store_freq[1]);
+		snprintf(m3, 5,"%f", store_freq[2]);
+		snprintf(m4, 5,"%f", store_freq[3]);
+		snprintf(m5, 5,"%f", store_freq[4]);
+
+		snprintf(n1, 5,"%f", store_dfreq[0]);
+		snprintf(n2, 5,"%f", store_dfreq[1]);
+		snprintf(n3, 5,"%f", store_dfreq[2]);
+		snprintf(n4, 5,"%f", store_dfreq[3]);
+		snprintf(n5, 5,"%f", store_dfreq[4]);
 		
 		vTaskDelay(10);
 	}
@@ -576,7 +566,6 @@ static void prvVGAOutTask(void *pvParameters)
 				alt_up_char_buffer_string(char_buf, n3, 49, 46);
 				alt_up_char_buffer_string(char_buf, n4, 54, 46);
 				alt_up_char_buffer_string(char_buf, n5, 59, 46);
-
 			}
 		}
 		vTaskDelay(20);
