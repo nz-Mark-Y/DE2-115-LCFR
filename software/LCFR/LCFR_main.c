@@ -1,6 +1,7 @@
 /* Standard includes. */
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -10,6 +11,9 @@
 #include "alt_types.h"
 #include "sys/alt_irq.h"
 #include "altera_up_avalon_ps2.h"
+#include "io.h"
+#include "altera_up_avalon_video_character_buffer_with_dma.h"
+#include "altera_up_avalon_video_pixel_buffer_dma.h"
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
@@ -39,6 +43,17 @@
 #define PS2_DP 0x71
 #define PS2_KEYRELEASE 0xF0
 
+#define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
+#define FREQPLT_GRID_SIZE_X 5	//pixel separation in the x axis between two data points
+#define FREQPLT_ORI_Y 199.0		//y axis pixel position at the plot origin
+#define FREQPLT_FREQ_RES 20.0	//number of pixels per Hz (y axis scale)
+
+#define ROCPLT_ORI_X 101
+#define ROCPLT_GRID_SIZE_X 5
+#define ROCPLT_ORI_Y 259.0
+#define ROCPLT_ROC_RES 0.5		//number of pixels per Hz/s (y axis scale)
+#define MIN_FREQ 25.0 //minimum frequency to draw
+
 /* Function Declarations. */
 static void prvDecideTask(void *pvParameters);
 static void prvLEDOutTask(void *pvParameters);
@@ -66,6 +81,16 @@ int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 /* Handles. */
 TimerHandle_t drop_timer;
 TimerHandle_t recon_timer;
+TaskHandle_t PRVGADraw;
+static QueueHandle_t Q_freq_data;
+
+/* Structs. */
+typedef struct{
+	unsigned int x1;
+	unsigned int y1;
+	unsigned int x2;
+	unsigned int y2;
+} Line;
 
 /* ISRs. */
 void button_interrupts_function(void* context, alt_u32 id) {
@@ -93,12 +118,14 @@ void button_interrupts_function(void* context, alt_u32 id) {
 
 void freq_relay() {
 	unsigned int temp = IORD(FREQUENCY_ANALYSER_BASE, 0); // Get the sample count between the two most recent peaks
-	
+
 	//Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
 	if (temp > 0) {
 		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
 		signal_freq = SAMPLE_FREQ / (double) temp;
 	}
+
+	xQueueSendToBackFromISR( Q_freq_data, &signal_freq, pdFALSE );
 
 	return;
 }
@@ -255,7 +282,7 @@ int main(void) {
 
 	alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 
-	//Set up keyboard
+	// Set up keyboard
 	if(ps2_device == NULL){
 		printf("Couldn't find a PS/2 device\n");
 		return 1;
@@ -264,8 +291,11 @@ int main(void) {
 	alt_up_ps2_disable_read_interrupt(ps2_device);
 	alt_irq_register(PS2_IRQ, ps2_device, ps2_isr);
 
+	// Create Timers
 	drop_timer = xTimerCreate("Shedding Timer", 500, pdFALSE, NULL, vTimerDropCallback);
 	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
+
+	Q_freq_data = xQueueCreate( 100, sizeof(double) );
 
 	// Set up Tasks
 	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
@@ -387,12 +417,92 @@ static void prvLEDOutTask(void *pvParameters)
 
 static void prvVGAOutTask(void *pvParameters)
 {
-	while (1)
-	{
-		if (maintenance == 0) {
-			printf("Signal frequency: %f Hz\n", signal_freq);
-			printf("Rate of change: %f\n", roc_freq);
+	//initialize VGA controllers
+	alt_up_pixel_buffer_dma_dev *pixel_buf;
+	pixel_buf = alt_up_pixel_buffer_dma_open_dev(VIDEO_PIXEL_BUFFER_DMA_NAME);
+	if (pixel_buf == NULL) {
+		printf("can't find pixel buffer device\n");
+	}
+	alt_up_pixel_buffer_dma_clear_screen(pixel_buf, 0);
+
+	alt_up_char_buffer_dev *char_buf;
+	char_buf = alt_up_char_buffer_open_dev("/dev/video_character_buffer_with_dma");
+	if (char_buf == NULL) {
+		printf("can't find char buffer device\n");
+	}
+	alt_up_char_buffer_clear(char_buf);
+
+	//Set up plot axes
+	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+	alt_up_pixel_buffer_dma_draw_vline(pixel_buf, 100, 50, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+	alt_up_pixel_buffer_dma_draw_vline(pixel_buf, 100, 220, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+
+	alt_up_char_buffer_string(char_buf, "Frequency(Hz)", 4, 4);
+	alt_up_char_buffer_string(char_buf, "52", 10, 7);
+	alt_up_char_buffer_string(char_buf, "50", 10, 12);
+	alt_up_char_buffer_string(char_buf, "48", 10, 17);
+	alt_up_char_buffer_string(char_buf, "46", 10, 22);
+
+	alt_up_char_buffer_string(char_buf, "df/dt(Hz/s)", 4, 26);
+	alt_up_char_buffer_string(char_buf, "60", 10, 28);
+	alt_up_char_buffer_string(char_buf, "30", 10, 30);
+	alt_up_char_buffer_string(char_buf, "0", 10, 32);
+	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
+	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
+
+
+	double freq[100], dfreq[100];
+	int i = 99, j = 0;
+	Line line_freq, line_roc;
+
+	while(1){
+		//receive frequency data from queue
+		while(uxQueueMessagesWaiting( Q_freq_data ) != 0){
+			xQueueReceive( Q_freq_data, freq+i, 0 );
+
+			//calculate frequency RoC
+			if(i==0){
+				dfreq[0] = (freq[0]-freq[99]) * 2.0 * freq[0] * freq[99] / (freq[0]+freq[99]);
+			}
+			else{
+				dfreq[i] = (freq[i]-freq[i-1]) * 2.0 * freq[i]* freq[i-1] / (freq[i]+freq[i-1]);
+			}
+
+			if (dfreq[i] > 100.0){
+				dfreq[i] = 100.0;
+			}
+
+			i =	++i%100; //point to the next data (oldest) to be overwritten
+
 		}
-		vTaskDelay(100);
+
+		//clear old graph to draw new graph
+		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
+		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 201, 639, 299, 0, 0);
+
+		for (j = 0; j < 99; ++j) { //i here points to the oldest data, j loops through all the data to be drawn on VGA
+			if (((int)(freq[(i+j)%100]) > MIN_FREQ) && ((int)(freq[(i+j+1)%100]) > MIN_FREQ)){
+				//Calculate coordinates of the two data points to draw a line in between
+				//Frequency plot
+				line_freq.x1 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * j;
+				line_freq.y1 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j)%100] - MIN_FREQ));
+
+				line_freq.x2 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * (j + 1);
+				line_freq.y2 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j+1)%100] - MIN_FREQ));
+
+				//Frequency RoC plot
+				line_roc.x1 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * j;
+				line_roc.y1 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j)%100]);
+
+				line_roc.x2 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * (j + 1);
+				line_roc.y2 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j+1)%100]);
+
+				//Draw
+				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_freq.x1, line_freq.y1, line_freq.x2, line_freq.y2, 0x3ff << 0, 0);
+				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
+			}
+		}
+		vTaskDelay(40);
 	}
 }
