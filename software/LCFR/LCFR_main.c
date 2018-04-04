@@ -389,8 +389,7 @@ static void prvDecideTask(void *pvParameters) {
 
 static void prvLEDOutTask(void *pvParameters)
 {
-	while (1)
-	{
+	while (1) {
 		int loads_num = 0;
 		int loads_num_rev = 0;
 		int i;
@@ -521,15 +520,14 @@ static void prvVGAOutTask(void *pvParameters)
 				snprintf(string, 10,"%d s",system_uptime);
 				alt_up_char_buffer_string(char_buf, string, 25, 40);
 
-				alt_up_char_buffer_string(char_buf, "               ", 24, 42);
 				if (maintenance == 0) {
-					if(first_load_shed == 0){
-						alt_up_char_buffer_string(char_buf, "Monitoring", 24, 42);
+					if (first_load_shed == 0) {
+						alt_up_char_buffer_string(char_buf, "Monitoring     ", 24, 42);
 					} else {
 						alt_up_char_buffer_string(char_buf, "Load Management", 24, 42);
 					}
 				} else {
-					alt_up_char_buffer_string(char_buf, "Maintenance", 24, 42);
+					alt_up_char_buffer_string(char_buf, "Maintenance    ", 24, 42);
 				}
 			}
 		}
