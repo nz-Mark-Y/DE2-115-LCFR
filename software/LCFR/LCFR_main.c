@@ -78,9 +78,12 @@ int switches[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 double input_number = 0.0, input_decimal = 0.0, input_decimal_equiv = 0.0, input_final_number = 0.0;
 int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
+int system_uptime = 0;
+
 /* Handles. */
 TimerHandle_t drop_timer;
 TimerHandle_t recon_timer;
+TimerHandle_t system_up_timer;
 TaskHandle_t PRVGADraw;
 static QueueHandle_t Q_freq_data;
 
@@ -270,6 +273,10 @@ void vTimerReconnectCallback(xTimerHandle t_timer) {
 	reconnect_load_timeout = 1;
 }
 
+void vTimerSystemUptimeCallback(xTimerHandle t_timer){
+	system_uptime += 1;
+}
+
 /* Main function. */
 int main(void) {
 	// Set up Interrupts
@@ -294,6 +301,7 @@ int main(void) {
 	// Create Timers
 	drop_timer = xTimerCreate("Shedding Timer", 500, pdFALSE, NULL, vTimerDropCallback);
 	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
+	system_up_timer = xTimerCreate("System Uptime Timer", 1000, pdFALSE, NULL, vTimerSystemUptimeCallback);
 
 	Q_freq_data = xQueueCreate( 100, sizeof(double) );
 
@@ -451,6 +459,9 @@ static void prvVGAOutTask(void *pvParameters)
 	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
+	//Write static text
+	alt_up_char_buffer_string(char_buf, "System uptime: ", 10, 40);
+
 
 	double freq[100], dfreq[100];
 	int i = 99, j = 0;
@@ -501,6 +512,9 @@ static void prvVGAOutTask(void *pvParameters)
 				//Draw
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_freq.x1, line_freq.y1, line_freq.x2, line_freq.y2, 0x3ff << 0, 0);
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_roc.x1, line_roc.y1, line_roc.x2, line_roc.y2, 0x3ff << 0, 0);
+
+				//Write dynamic text
+				alt_up_char_buffer_string(char_buf, "System uptime:", 25, 40);
 			}
 		}
 		vTaskDelay(20);
