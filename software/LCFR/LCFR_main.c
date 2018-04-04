@@ -95,6 +95,8 @@ int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
 // System Status
 int system_uptime = 0;
+int drop_delay = 0;
+int drop_delay_flag = 0;
 double store_freq[5] = { 0, 0, 0, 0, 0 };
 double store_dfreq[5] = { 0, 0, 0, 0, 0 };
 char system_uptime_string[10];
@@ -109,6 +111,7 @@ char n1[5], n2[5], n3[5], n4[5], n5[5];
 TimerHandle_t drop_timer;
 TimerHandle_t recon_timer;
 TimerHandle_t system_up_timer;
+TimerHandle_t drop_delay_timer;
 static QueueHandle_t Q_freq_data;
 
 /*=============*/
@@ -154,6 +157,13 @@ void freq_relay() {
 	if (temp > 0) {
 		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
 		signal_freq = SAMPLE_FREQ / (double) temp;
+	}
+
+	if ((first_load_shed == 0) && (drop_delay_flag == 0)) {
+		if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) {
+			xTimerStart(drop_delay_timer, 0);
+			drop_delay_flag = 1;
+		}
 	}
 
 	xQueueSendToBackFromISR( Q_freq_data, &signal_freq, pdFALSE ); // Add data to xQueue
@@ -311,6 +321,10 @@ void vTimerSystemUptimeCallback(xTimerHandle t_timer){
 	system_uptime += 1;
 }
 
+void vTimerDropDelayCallback(xTimerHandle t_timer){
+	drop_delay += 1;
+}
+
 /*================*/
 /* Main function. */
 /*================*/
@@ -338,6 +352,7 @@ int main(void) {
 	drop_timer = xTimerCreate("Shedding Timer", 500, pdFALSE, NULL, vTimerDropCallback);
 	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
 	system_up_timer = xTimerCreate("System Uptime Timer", 1000, pdTRUE, NULL, vTimerSystemUptimeCallback);
+	drop_delay_timer = xTimerCreate("Drop Delay Timer", 1, pdTRUE, NULL, vTimerDropDelayCallback);
 
 	xTimerStart(system_up_timer, 0);
 
@@ -392,6 +407,11 @@ static void prvDecideTask(void *pvParameters) {
 				if (first_load_shed == 0) { // Drop a load, if we have no dropped loads. First load drop.
 					first_load_shed = 1;
 					drop_load();
+
+					if (drop_delay_flag == 1) {
+						xTimerStop(drop_delay_timer, 0);
+						printf("%d\n", drop_delay);
+					}
 				} else {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
 
