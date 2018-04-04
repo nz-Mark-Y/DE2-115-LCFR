@@ -301,7 +301,7 @@ int main(void) {
 	// Create Timers
 	drop_timer = xTimerCreate("Shedding Timer", 500, pdFALSE, NULL, vTimerDropCallback);
 	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
-	system_up_timer = xTimerCreate("System Uptime Timer", 1000, pdFALSE, NULL, vTimerSystemUptimeCallback);
+	system_up_timer = xTimerCreate("System Uptime Timer", 1000, pdTRUE, NULL, vTimerSystemUptimeCallback);
 
 	xTimerStart(system_up_timer, 0);
 
@@ -389,8 +389,7 @@ static void prvDecideTask(void *pvParameters) {
 
 static void prvLEDOutTask(void *pvParameters)
 {
-	while (1)
-	{
+	while (1) {
 		int loads_num = 0;
 		int loads_num_rev = 0;
 		int i;
@@ -519,11 +518,11 @@ static void prvVGAOutTask(void *pvParameters)
 
 				//Write dynamic text
 				char string[10];
-				snprintf(string, 10,"%d",system_uptime);
+				snprintf(string, 10,"%d s",system_uptime);
 				alt_up_char_buffer_string(char_buf, string, 25, 40);
 
-				if(maintenance == 0) {
-					if(first_load_shed == 0){
+				if (maintenance == 0) {
+					if (first_load_shed == 0) {
 						alt_up_char_buffer_string(char_buf, "Monitoring     ", 24, 42);
 					} else {
 						alt_up_char_buffer_string(char_buf, "Load Management", 24, 42);
