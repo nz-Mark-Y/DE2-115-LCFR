@@ -464,6 +464,7 @@ static void prvVGAOutTask(void *pvParameters)
 	//Write static text
 	alt_up_char_buffer_string(char_buf, "System uptime: ", 10, 40);
 	alt_up_char_buffer_string(char_buf, "Current mode: ", 10, 42);
+	alt_up_char_buffer_string(char_buf, "Latest 5 measurements: ", 10, 44);
 
 
 	double freq[100], dfreq[100];
@@ -530,6 +531,10 @@ static void prvVGAOutTask(void *pvParameters)
 				} else {
 					alt_up_char_buffer_string(char_buf, "Maintenance    ", 24, 42);
 				}
+
+				char m1[40];
+				snprintf(m1, 10,"%.2f, %.2f, %.2f, %.2f, %.2f", (freq[0], freq[1], freq[2], freq[3], freq[4]));
+				alt_up_char_buffer_string(char_buf, m1, 33, 44);
 			}
 		}
 		vTaskDelay(20);
