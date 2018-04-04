@@ -97,11 +97,15 @@ int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 int system_uptime = 0;
 int drop_delay = 0;
 int drop_delay_flag = 0;
+int min_drop_delay = 0;
+int max_drop_delay = 0;
 double store_freq[5] = { 0, 0, 0, 0, 0 };
 double store_dfreq[5] = { 0, 0, 0, 0, 0 };
 char system_uptime_string[10];
 char min_freq_string[12];
 char max_roc_string[12];
+char min_drop_string[8];
+char max_drop_string[8];
 char m1[5], m2[5], m3[5], m4[5], m5[5];
 char n1[5], n2[5], n3[5], n4[5], n5[5];
 
@@ -161,8 +165,8 @@ void freq_relay() {
 
 	if ((first_load_shed == 0) && (drop_delay_flag == 0)) {
 		if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) {
-			xTimerStart(drop_delay_timer, 0);
 			drop_delay_flag = 1;
+			drop_delay = 0;
 		}
 	}
 
@@ -355,6 +359,7 @@ int main(void) {
 	drop_delay_timer = xTimerCreate("Drop Delay Timer", 1, pdTRUE, NULL, vTimerDropDelayCallback);
 
 	xTimerStart(system_up_timer, 0);
+	xTimerStart(drop_delay_timer, 0);
 
 	Q_freq_data = xQueueCreate( 100, sizeof(double) );
 
@@ -409,8 +414,14 @@ static void prvDecideTask(void *pvParameters) {
 					drop_load();
 
 					if (drop_delay_flag == 1) {
-						xTimerStop(drop_delay_timer, 0);
-						printf("%d\n", drop_delay);
+						if (drop_delay > max_drop_delay) {
+							max_drop_delay = drop_delay;
+						}
+						if (((drop_delay < min_drop_delay) && (drop_delay != 0)) || (min_drop_delay == 0)) {
+							min_drop_delay = drop_delay;
+						}
+						printf("Drop Time: %d ms\n", drop_delay);
+						drop_delay_flag = 0;
 					}
 				} else {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
@@ -506,6 +517,9 @@ static void prvLEDOutTask(void *pvParameters) {
 
 		snprintf(min_freq_string, 12, "%.1f Hz  ", desired_min_freq);
 		snprintf(max_roc_string, 12, "%.1f Hz/s  ", desired_max_roc_freq);
+
+		snprintf(min_drop_string, 8, "%d ms  ", min_drop_delay);
+		snprintf(max_drop_string, 8, "%d ms  ", max_drop_delay);
 
 		vTaskDelay(10);
 	}
@@ -637,6 +651,9 @@ static void prvVGAOutTask(void *pvParameters) {
 
 				alt_up_char_buffer_string(char_buf, min_freq_string, 39, 48);
 				alt_up_char_buffer_string(char_buf, max_roc_string, 43, 50);
+
+				alt_up_char_buffer_string(char_buf, min_drop_string, 30, 52);
+				alt_up_char_buffer_string(char_buf, max_drop_string, 30, 54);
 			}
 		}
 		vTaskDelay(20);
