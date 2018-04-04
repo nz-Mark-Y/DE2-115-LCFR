@@ -80,11 +80,8 @@ int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
 int system_uptime = 0;
 char string[10];
-char m1[5];
-char m2[5];
-char m3[5];
-char m4[5];
-char m5[5];
+char m1[5], m2[5], m3[5], m4[5], m5[5];
+char n1[5], n2[5], n3[5], n4[5], n5[5];
 
 /* Handles. */
 TimerHandle_t drop_timer;
@@ -425,7 +422,38 @@ static void prvLEDOutTask(void *pvParameters)
 			IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, 0);
 		}
 		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, loads_num);
+		
 
+		//Process latest 5 values
+		double freq[5], dfreq[5];
+		int i = 4;
+		//Receive frequency data from queue
+		while(uxQueueMessagesWaiting( Q_freq_data ) != 0){
+			xQueueReceive( Q_freq_data, freq+i, 0 );
+
+			//calculate frequency RoC
+			if(i==0){
+				dfreq[0] = (freq[0]-freq[99]) * 2.0 * freq[0] * freq[99] / (freq[0]+freq[99]);
+			} else {
+				dfreq[i] = (freq[i]-freq[i-1]) * 2.0 * freq[i]* freq[i-1] / (freq[i]+freq[i-1]);
+			}
+			if (dfreq[i] > 100.0){
+				dfreq[i] = 100.0;
+			}
+			i =	++i%100; //point to the next data (oldest) to be overwritten
+		}
+		snprintf(m1, 5,"%f", freq[0]);
+		snprintf(m2, 5,"%f", freq[1]);
+		snprintf(m3, 5,"%f", freq[2]);
+		snprintf(m4, 5,"%f", freq[3]);
+		snprintf(m5, 5,"%f", freq[4]);
+
+		snprintf(n1, 5,"%f", dfreq[0]);
+		snprintf(n2, 5,"%f", dfreq[1]);
+		snprintf(n3, 5,"%f", dfreq[2]);
+		snprintf(n4, 5,"%f", dfreq[3]);
+		snprintf(n5, 5,"%f", dfreq[4]);
+		
 		vTaskDelay(10);
 	}
 }
@@ -469,7 +497,8 @@ static void prvVGAOutTask(void *pvParameters)
 	//Write static text
 	alt_up_char_buffer_string(char_buf, "System uptime: ", 10, 40);
 	alt_up_char_buffer_string(char_buf, "Current mode: ", 10, 42);
-	alt_up_char_buffer_string(char_buf, "Latest 5 measurements: ", 10, 44);
+	alt_up_char_buffer_string(char_buf, "Latest 5 frequency measurements: ", 10, 44);
+	alt_up_char_buffer_string(char_buf, "Latest 5 df/dt measurements: ", 10, 46);
 
 
 	double freq[100], dfreq[100];
@@ -536,16 +565,17 @@ static void prvVGAOutTask(void *pvParameters)
 					alt_up_char_buffer_string(char_buf, "Maintenance    ", 24, 42);
 				}
 
-				snprintf(m1, 5,"%f", freq[0]);
-				alt_up_char_buffer_string(char_buf, m1, 33, 44);
-				snprintf(m2, 5,"%f", freq[1]);
-				alt_up_char_buffer_string(char_buf, m2, 38, 44);
-				snprintf(m3, 5,"%f", freq[2]);
-				alt_up_char_buffer_string(char_buf, m3, 43, 44);
-				snprintf(m4, 5,"%f", freq[3]);
-				alt_up_char_buffer_string(char_buf, m4, 48, 44);
-				snprintf(m5, 5,"%f", freq[4]);
-				alt_up_char_buffer_string(char_buf, m5, 53, 44);
+				alt_up_char_buffer_string(char_buf, m1, 43, 44);
+				alt_up_char_buffer_string(char_buf, m2, 48, 44);
+				alt_up_char_buffer_string(char_buf, m3, 53, 44);
+				alt_up_char_buffer_string(char_buf, m4, 58, 44);
+				alt_up_char_buffer_string(char_buf, m5, 63, 44);
+
+				alt_up_char_buffer_string(char_buf, n1, 39, 46);
+				alt_up_char_buffer_string(char_buf, n2, 44, 46);
+				alt_up_char_buffer_string(char_buf, n3, 49, 46);
+				alt_up_char_buffer_string(char_buf, n4, 54, 46);
+				alt_up_char_buffer_string(char_buf, n5, 59, 46);
 
 			}
 		}
