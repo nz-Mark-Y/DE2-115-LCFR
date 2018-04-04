@@ -64,7 +64,8 @@ double input_number = 0.0, input_decimal = 0.0, input_decimal_equiv = 0.0, input
 int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 
 /* Handles. */
-TimerHandle_t timer;
+TimerHandle_t drop_timer;
+TimerHandle_t recon_timer;
 
 /* ISRs. */
 void button_interrupts_function(void* context, alt_u32 id) {
@@ -263,6 +264,9 @@ int main(void) {
 	alt_up_ps2_disable_read_interrupt(ps2_device);
 	alt_irq_register(PS2_IRQ, ps2_device, ps2_isr);
 
+	drop_timer = xTimerCreate("Shedding Timer", 500, pdFALSE, NULL, vTimerDropCallback);
+	recon_timer = xTimerCreate("Reconnect Timer", 500, pdFALSE, NULL, vTimerReconnectCallback);
+
 	// Set up Tasks
 	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
 	xTaskCreate( prvLEDOutTask, "Rreg2", configMINIMAL_STACK_SIZE, mainREG_LED_OUT_PARAMETER, mainREG_TEST_PRIORITY, NULL);
@@ -310,12 +314,13 @@ static void prvDecideTask(void *pvParameters) {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
 
 					if(shed_flag == 0) { // Stop the timer if we are timing a 500ms for a load reconnection
-						xTimerStop(timer, 0);
+						xTimerStop(recon_timer, 0);
 					}
 
 					if (drop_load_timeout == 0) { // If we haven't had a continuous run of unstable data
-						timer = xTimerCreate("Shedding Timer", 500, pdTRUE, NULL, vTimerDropCallback);
-						xTimerStart(timer, 0);
+						if (xTimerIsTimerActive(drop_timer) == pdFALSE) {
+							xTimerStart(drop_timer, 0);
+						}
 					} else {
 						drop_load();
 					}
@@ -325,19 +330,19 @@ static void prvDecideTask(void *pvParameters) {
 				drop_load_timeout = 0; // No longer a continuous run of unstable data
 				
 				if (shed_flag == 1) { // Stop the timer if we are timing a 500ms for a load drop
-					xTimerStop(timer, 0);
+					xTimerStop(drop_timer, 0);
 				}
 
 				if (reconnect_load_timeout == 0) { // If we haven't had a continuous run of stable data
-					timer = xTimerCreate("Reconnect Timer", 500, pdTRUE, NULL, vTimerReconnectCallback);
-					xTimerStart(timer, 0);
+					if (xTimerIsTimerActive(recon_timer) == pdFALSE) {
+						xTimerStart(recon_timer, 0);
+					}
 				} else {
 					reconnect_load();
 				}
 				shed_flag = 0;
 			}
 		}
-
 		vTaskDelay(20);
 	}
 }
