@@ -141,9 +141,9 @@ void button_interrupts_function(void* context, alt_u32 id) {
 	(*temp) = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE); // Store which button was pressed
 
 	if (maintenance == 1) { // Toggle Maintenance Mode
-		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 		maintenance = 0;
-		xSemaphoreGive(shared_resource_mutex);
+		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		printf("Maintenance Mode Disabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
@@ -152,9 +152,9 @@ void button_interrupts_function(void* context, alt_u32 id) {
 		drop_delay = 0;
 		drop_delay_flag = 0;
 	} else {
-		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 		maintenance = 1;
-		xSemaphoreGive(shared_resource_mutex);
+		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		printf("Maintenance Mode Enabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
@@ -170,18 +170,18 @@ void freq_relay() {
 
 	// Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
 	if (temp > 0) {
-		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
 		signal_freq = SAMPLE_FREQ / (double) temp;
-		xSemaphoreGive(shared_resource_mutex);
+		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 	}
 
 	if ((first_load_shed == 0) && (drop_delay_flag == 0)) {
 		if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) {
-			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			drop_delay_flag = 1;
 			drop_delay = 0;
-			xSemaphoreGive(shared_resource_mutex);
+			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		}
 	}
 
@@ -197,11 +197,11 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 	if (byte == PS2_ENTER) {
 		if(input_duplicate_flag == 1) {
-			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			input_duplicate_flag = 0;
-			xSemaphoreGive(shared_resource_mutex);
+			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		} else {
-			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			if(input_decimal_flag == 1) {
 				input_decimal *= 10;
 			} else {
@@ -227,19 +227,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 			input_decimal_flag = 0;
 			input_number_counter = 0;
-			xSemaphoreGive(shared_resource_mutex);
+			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		}
 	} else if(byte == PS2_KEYRELEASE) {
-		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 		input_duplicate_flag = 1;
-		xSemaphoreGive(shared_resource_mutex);
+		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 	} else {
 		if(input_duplicate_flag == 1) {
-			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			input_duplicate_flag = 0;
-			xSemaphoreGive(shared_resource_mutex);
+			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		} else {
-			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			// Take care of decimal point
 			if (byte == PS2_DP) {
 				input_decimal_flag = 1;
@@ -266,7 +266,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 					input_decimal /= 10.0;
 				}
 			}
-			xSemaphoreGive(shared_resource_mutex);
+			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		}
 	}
 }
