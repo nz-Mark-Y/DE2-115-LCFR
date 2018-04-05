@@ -96,6 +96,7 @@ int input_number_counter = 0, input_decimal_flag = 0, input_duplicate_flag = 0;
 // System Status
 int system_uptime = 0;
 int drop_delay = 0;
+double drop_average = 0.0;
 int drop_delay_flag = 0;
 int min_drop_delay = 0;
 int max_drop_delay = 0;
@@ -106,6 +107,7 @@ char min_freq_string[12];
 char max_roc_string[12];
 char min_drop_string[8];
 char max_drop_string[8];
+char average_drop_string[8];
 char m1[5], m2[5], m3[5], m4[5], m5[5];
 char n1[5], n2[5], n3[5], n4[5], n5[5];
 
@@ -422,6 +424,9 @@ static void prvDecideTask(void *pvParameters) {
 						}
 						printf("Drop Time: %d ms\n", drop_delay);
 						drop_delay_flag = 0;
+
+						//Calculate accumulated average
+						drop_average = (drop_average + (double)drop_delay) / 2.0;
 					}
 				} else {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
@@ -520,6 +525,8 @@ static void prvLEDOutTask(void *pvParameters) {
 
 		snprintf(min_drop_string, 8, "%d ms  ", min_drop_delay);
 		snprintf(max_drop_string, 8, "%d ms  ", max_drop_delay);
+
+		snprintf(average_drop_string, 8, "%.2f ms  ", drop_average);
 
 		vTaskDelay(10);
 	}
@@ -654,6 +661,8 @@ static void prvVGAOutTask(void *pvParameters) {
 
 				alt_up_char_buffer_string(char_buf, min_drop_string, 30, 52);
 				alt_up_char_buffer_string(char_buf, max_drop_string, 30, 54);
+
+				alt_up_char_buffer_string(char_buf, average_drop_string, 30, 56);
 			}
 		}
 		vTaskDelay(20);
