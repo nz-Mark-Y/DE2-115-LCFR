@@ -108,7 +108,7 @@ char min_freq_string[12];
 char max_roc_string[12];
 char min_drop_string[8];
 char max_drop_string[8];
-char average_drop_string[8];
+char average_drop_string[12];
 char m1[5], m2[5], m3[5], m4[5], m5[5];
 char n1[5], n2[5], n3[5], n4[5], n5[5];
 
@@ -148,6 +148,9 @@ void button_interrupts_function(void* context, alt_u32 id) {
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 		alt_up_ps2_disable_read_interrupt(ps2_device); // Disable keyboard
+
+		drop_delay = 0;
+		drop_delay_flag = 0;
 	} else {
 		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		maintenance = 1;
@@ -272,25 +275,25 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 /* Function Macros. */
 /*==================*/
 #define drop_load() { \
-	if (loads[0] == 1) loads[0] = 0; \
-	else if (loads[1] == 1) loads[1] = 0; \
-	else if (loads[2] == 1) loads[2] = 0; \
-	else if (loads[3] == 1) loads[3] = 0; \
-	else if (loads[4] == 1) loads[4] = 0; \
-	else if (loads[5] == 1) loads[5] = 0; \
+	if (loads[7] == 1) loads[7] = 0; \
 	else if (loads[6] == 1) loads[6] = 0; \
-	else loads[7] = 0; \
+	else if (loads[5] == 1) loads[5] = 0; \
+	else if (loads[4] == 1) loads[4] = 0; \
+	else if (loads[3] == 1) loads[3] = 0; \
+	else if (loads[2] == 1) loads[2] = 0; \
+	else if (loads[1] == 1) loads[1] = 0; \
+	else loads[0] = 0; \
 }
 
 #define reconnect_load() { \
-	if ((loads[7] == 0) && (switches[7] == 1)) loads[7] = 1; \
-	else if ((loads[6] == 0) && (switches[6] == 1)) loads[6] = 1; \
-	else if ((loads[5] == 0) && (switches[5] == 1)) loads[5] = 1; \
-	else if ((loads[4] == 0) && (switches[4] == 1)) loads[4] = 1; \
-	else if ((loads[3] == 0) && (switches[3] == 1)) loads[3] = 1; \
-	else if ((loads[2] == 0) && (switches[2] == 1)) loads[2] = 1; \
+	if ((loads[0] == 0) && (switches[0] == 1)) loads[0] = 1; \
 	else if ((loads[1] == 0) && (switches[1] == 1)) loads[1] = 1; \
-	else if (switches[0] == 1) loads[0] = 1; \
+	else if ((loads[2] == 0) && (switches[2] == 1)) loads[2] = 1; \
+	else if ((loads[3] == 0) && (switches[3] == 1)) loads[3] = 1; \
+	else if ((loads[4] == 0) && (switches[4] == 1)) loads[4] = 1; \
+	else if ((loads[5] == 0) && (switches[5] == 1)) loads[5] = 1; \
+	else if ((loads[6] == 0) && (switches[6] == 1)) loads[6] = 1; \
+	else if (switches[7] == 1) loads[7] = 1; \
 }
 /*============*/
 /* Functions. */
@@ -457,7 +460,9 @@ static void prvDecideTask(void *pvParameters) {
 					drop_load();
 					xSemaphoreGive(shared_resource_mutex);
 
+					// Timing Drop Delay
 					if (drop_delay_flag == 1) {
+						// Set min and max
 						if (drop_delay > max_drop_delay) {
 							xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 							max_drop_delay = drop_delay;
@@ -468,10 +473,20 @@ static void prvDecideTask(void *pvParameters) {
 							min_drop_delay = drop_delay;
 							xSemaphoreGive(shared_resource_mutex);
 						}
-						printf("Drop Time: %d ms\n", drop_delay);
+
 						xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
+						// Calculate accumulated average
+						if (drop_average == 0) {
+							drop_average = (double) drop_delay;
+						} else {
+							drop_average = (drop_average + (double) drop_delay) / 2.0;
+						}
+
+						if (drop_delay != 0) {
+							printf("Drop Time: %d ms\n", drop_delay);
+						}
+
 						drop_delay_flag = 0;
-						drop_average = (drop_average + (double)drop_delay) / 2.0;
 						xSemaphoreGive(shared_resource_mutex);
 					}
 				} else {
@@ -586,7 +601,8 @@ static void prvLEDOutTask(void *pvParameters) {
 		snprintf(min_drop_string, 8, "%d ms  ", min_drop_delay);
 		snprintf(max_drop_string, 8, "%d ms  ", max_drop_delay);
 
-		snprintf(average_drop_string, 8, "%.2f ms  ", drop_average);
+		snprintf(average_drop_string, 12, "%.2f ms  ", drop_average);
+		
 		xSemaphoreGive(shared_resource_mutex);
 
 		vTaskDelay(10);
