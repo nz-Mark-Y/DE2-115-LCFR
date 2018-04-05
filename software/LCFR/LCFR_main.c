@@ -107,7 +107,7 @@ char min_freq_string[12];
 char max_roc_string[12];
 char min_drop_string[8];
 char max_drop_string[8];
-char average_drop_string[8];
+char average_drop_string[12];
 char m1[5], m2[5], m3[5], m4[5], m5[5];
 char n1[5], n2[5], n3[5], n4[5], n5[5];
 
@@ -422,11 +422,18 @@ static void prvDecideTask(void *pvParameters) {
 						if (((drop_delay < min_drop_delay) && (drop_delay != 0)) || (min_drop_delay == 0)) {
 							min_drop_delay = drop_delay;
 						}
+
+						//Calculate accumulated average
+						if (drop_average == 0) {
+							drop_average = (double) drop_delay;
+						} else {
+							drop_average = (drop_average + (double) drop_delay) / 2.0;
+						}
+
 						printf("Drop Time: %d ms\n", drop_delay);
 						drop_delay_flag = 0;
 
-						//Calculate accumulated average
-						drop_average = (drop_average + (double)drop_delay) / 2.0;
+
 					}
 				} else {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
@@ -526,7 +533,7 @@ static void prvLEDOutTask(void *pvParameters) {
 		snprintf(min_drop_string, 8, "%d ms  ", min_drop_delay);
 		snprintf(max_drop_string, 8, "%d ms  ", max_drop_delay);
 
-		snprintf(average_drop_string, 8, "%.2f ms  ", drop_average);
+		snprintf(average_drop_string, 12, "%.2f ms  ", drop_average);
 
 		vTaskDelay(10);
 	}
