@@ -398,7 +398,7 @@ int main(void) {
 	Q_freq_data = xQueueCreate( 100, sizeof(double) );
 
 	//Crete mutex
-	shared_resource_mutex = xSemaphoreCreateMutex(void);
+	shared_resource_mutex = xSemaphoreCreateMutex();
 
 	// Set up Tasks
 	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
