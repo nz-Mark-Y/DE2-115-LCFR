@@ -11675,7 +11675,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
     57fc:	f800283a 	ret
 
 00005800 <translate_ps2>:
-	else if (switches[0] == 1) loads[0] = 1; \
+	else if (switches[7] == 1) loads[7] = 1; \
 }
 /*============*/
 /* Functions. */
@@ -12376,70 +12376,70 @@ static void prvDecideTask(void *pvParameters) {
 					drop_load();
     605c:	00820034 	movhi	r2,2048
     6060:	10829504 	addi	r2,r2,2644
-    6064:	10800017 	ldw	r2,0(r2)
+    6064:	10800717 	ldw	r2,28(r2)
     6068:	10800058 	cmpnei	r2,r2,1
     606c:	1000041e 	bne	r2,zero,6080 <prvDecideTask+0x23c>
     6070:	00820034 	movhi	r2,2048
     6074:	10829504 	addi	r2,r2,2644
-    6078:	10000015 	stw	zero,0(r2)
+    6078:	10000715 	stw	zero,28(r2)
     607c:	00003906 	br	6164 <prvDecideTask+0x320>
     6080:	00820034 	movhi	r2,2048
     6084:	10829504 	addi	r2,r2,2644
-    6088:	10800117 	ldw	r2,4(r2)
+    6088:	10800617 	ldw	r2,24(r2)
     608c:	10800058 	cmpnei	r2,r2,1
     6090:	1000041e 	bne	r2,zero,60a4 <prvDecideTask+0x260>
     6094:	00820034 	movhi	r2,2048
     6098:	10829504 	addi	r2,r2,2644
-    609c:	10000115 	stw	zero,4(r2)
+    609c:	10000615 	stw	zero,24(r2)
     60a0:	00003006 	br	6164 <prvDecideTask+0x320>
     60a4:	00820034 	movhi	r2,2048
     60a8:	10829504 	addi	r2,r2,2644
-    60ac:	10800217 	ldw	r2,8(r2)
+    60ac:	10800517 	ldw	r2,20(r2)
     60b0:	10800058 	cmpnei	r2,r2,1
     60b4:	1000041e 	bne	r2,zero,60c8 <prvDecideTask+0x284>
     60b8:	00820034 	movhi	r2,2048
     60bc:	10829504 	addi	r2,r2,2644
-    60c0:	10000215 	stw	zero,8(r2)
+    60c0:	10000515 	stw	zero,20(r2)
     60c4:	00002706 	br	6164 <prvDecideTask+0x320>
     60c8:	00820034 	movhi	r2,2048
     60cc:	10829504 	addi	r2,r2,2644
-    60d0:	10800317 	ldw	r2,12(r2)
+    60d0:	10800417 	ldw	r2,16(r2)
     60d4:	10800058 	cmpnei	r2,r2,1
     60d8:	1000041e 	bne	r2,zero,60ec <prvDecideTask+0x2a8>
     60dc:	00820034 	movhi	r2,2048
     60e0:	10829504 	addi	r2,r2,2644
-    60e4:	10000315 	stw	zero,12(r2)
+    60e4:	10000415 	stw	zero,16(r2)
     60e8:	00001e06 	br	6164 <prvDecideTask+0x320>
     60ec:	00820034 	movhi	r2,2048
     60f0:	10829504 	addi	r2,r2,2644
-    60f4:	10800417 	ldw	r2,16(r2)
+    60f4:	10800317 	ldw	r2,12(r2)
     60f8:	10800058 	cmpnei	r2,r2,1
     60fc:	1000041e 	bne	r2,zero,6110 <prvDecideTask+0x2cc>
     6100:	00820034 	movhi	r2,2048
     6104:	10829504 	addi	r2,r2,2644
-    6108:	10000415 	stw	zero,16(r2)
+    6108:	10000315 	stw	zero,12(r2)
     610c:	00001506 	br	6164 <prvDecideTask+0x320>
     6110:	00820034 	movhi	r2,2048
     6114:	10829504 	addi	r2,r2,2644
-    6118:	10800517 	ldw	r2,20(r2)
+    6118:	10800217 	ldw	r2,8(r2)
     611c:	10800058 	cmpnei	r2,r2,1
     6120:	1000041e 	bne	r2,zero,6134 <prvDecideTask+0x2f0>
     6124:	00820034 	movhi	r2,2048
     6128:	10829504 	addi	r2,r2,2644
-    612c:	10000515 	stw	zero,20(r2)
+    612c:	10000215 	stw	zero,8(r2)
     6130:	00000c06 	br	6164 <prvDecideTask+0x320>
     6134:	00820034 	movhi	r2,2048
     6138:	10829504 	addi	r2,r2,2644
-    613c:	10800617 	ldw	r2,24(r2)
+    613c:	10800117 	ldw	r2,4(r2)
     6140:	10800058 	cmpnei	r2,r2,1
     6144:	1000041e 	bne	r2,zero,6158 <prvDecideTask+0x314>
     6148:	00820034 	movhi	r2,2048
     614c:	10829504 	addi	r2,r2,2644
-    6150:	10000615 	stw	zero,24(r2)
+    6150:	10000115 	stw	zero,4(r2)
     6154:	00000306 	br	6164 <prvDecideTask+0x320>
     6158:	00820034 	movhi	r2,2048
     615c:	10829504 	addi	r2,r2,2644
-    6160:	10000715 	stw	zero,28(r2)
+    6160:	10000015 	stw	zero,0(r2)
 
 					if (drop_delay_flag == 1) {
     6164:	d0a05017 	ldw	r2,-32448(gp)
@@ -12578,70 +12578,70 @@ static void prvDecideTask(void *pvParameters) {
 						drop_load();
     62fc:	00820034 	movhi	r2,2048
     6300:	10829504 	addi	r2,r2,2644
-    6304:	10800017 	ldw	r2,0(r2)
+    6304:	10800717 	ldw	r2,28(r2)
     6308:	10800058 	cmpnei	r2,r2,1
     630c:	1000041e 	bne	r2,zero,6320 <prvDecideTask+0x4dc>
     6310:	00820034 	movhi	r2,2048
     6314:	10829504 	addi	r2,r2,2644
-    6318:	10000015 	stw	zero,0(r2)
+    6318:	10000715 	stw	zero,28(r2)
     631c:	00003906 	br	6404 <prvDecideTask+0x5c0>
     6320:	00820034 	movhi	r2,2048
     6324:	10829504 	addi	r2,r2,2644
-    6328:	10800117 	ldw	r2,4(r2)
+    6328:	10800617 	ldw	r2,24(r2)
     632c:	10800058 	cmpnei	r2,r2,1
     6330:	1000041e 	bne	r2,zero,6344 <prvDecideTask+0x500>
     6334:	00820034 	movhi	r2,2048
     6338:	10829504 	addi	r2,r2,2644
-    633c:	10000115 	stw	zero,4(r2)
+    633c:	10000615 	stw	zero,24(r2)
     6340:	00003006 	br	6404 <prvDecideTask+0x5c0>
     6344:	00820034 	movhi	r2,2048
     6348:	10829504 	addi	r2,r2,2644
-    634c:	10800217 	ldw	r2,8(r2)
+    634c:	10800517 	ldw	r2,20(r2)
     6350:	10800058 	cmpnei	r2,r2,1
     6354:	1000041e 	bne	r2,zero,6368 <prvDecideTask+0x524>
     6358:	00820034 	movhi	r2,2048
     635c:	10829504 	addi	r2,r2,2644
-    6360:	10000215 	stw	zero,8(r2)
+    6360:	10000515 	stw	zero,20(r2)
     6364:	00002706 	br	6404 <prvDecideTask+0x5c0>
     6368:	00820034 	movhi	r2,2048
     636c:	10829504 	addi	r2,r2,2644
-    6370:	10800317 	ldw	r2,12(r2)
+    6370:	10800417 	ldw	r2,16(r2)
     6374:	10800058 	cmpnei	r2,r2,1
     6378:	1000041e 	bne	r2,zero,638c <prvDecideTask+0x548>
     637c:	00820034 	movhi	r2,2048
     6380:	10829504 	addi	r2,r2,2644
-    6384:	10000315 	stw	zero,12(r2)
+    6384:	10000415 	stw	zero,16(r2)
     6388:	00001e06 	br	6404 <prvDecideTask+0x5c0>
     638c:	00820034 	movhi	r2,2048
     6390:	10829504 	addi	r2,r2,2644
-    6394:	10800417 	ldw	r2,16(r2)
+    6394:	10800317 	ldw	r2,12(r2)
     6398:	10800058 	cmpnei	r2,r2,1
     639c:	1000041e 	bne	r2,zero,63b0 <prvDecideTask+0x56c>
     63a0:	00820034 	movhi	r2,2048
     63a4:	10829504 	addi	r2,r2,2644
-    63a8:	10000415 	stw	zero,16(r2)
+    63a8:	10000315 	stw	zero,12(r2)
     63ac:	00001506 	br	6404 <prvDecideTask+0x5c0>
     63b0:	00820034 	movhi	r2,2048
     63b4:	10829504 	addi	r2,r2,2644
-    63b8:	10800517 	ldw	r2,20(r2)
+    63b8:	10800217 	ldw	r2,8(r2)
     63bc:	10800058 	cmpnei	r2,r2,1
     63c0:	1000041e 	bne	r2,zero,63d4 <prvDecideTask+0x590>
     63c4:	00820034 	movhi	r2,2048
     63c8:	10829504 	addi	r2,r2,2644
-    63cc:	10000515 	stw	zero,20(r2)
+    63cc:	10000215 	stw	zero,8(r2)
     63d0:	00000c06 	br	6404 <prvDecideTask+0x5c0>
     63d4:	00820034 	movhi	r2,2048
     63d8:	10829504 	addi	r2,r2,2644
-    63dc:	10800617 	ldw	r2,24(r2)
+    63dc:	10800117 	ldw	r2,4(r2)
     63e0:	10800058 	cmpnei	r2,r2,1
     63e4:	1000041e 	bne	r2,zero,63f8 <prvDecideTask+0x5b4>
     63e8:	00820034 	movhi	r2,2048
     63ec:	10829504 	addi	r2,r2,2644
-    63f0:	10000615 	stw	zero,24(r2)
+    63f0:	10000115 	stw	zero,4(r2)
     63f4:	00000306 	br	6404 <prvDecideTask+0x5c0>
     63f8:	00820034 	movhi	r2,2048
     63fc:	10829504 	addi	r2,r2,2644
-    6400:	10000715 	stw	zero,28(r2)
+    6400:	10000015 	stw	zero,0(r2)
 					}
 					shed_flag = 1;
     6404:	00800044 	movi	r2,1
@@ -12698,118 +12698,118 @@ static void prvDecideTask(void *pvParameters) {
 					reconnect_load();
     6478:	00820034 	movhi	r2,2048
     647c:	10829504 	addi	r2,r2,2644
-    6480:	10800717 	ldw	r2,28(r2)
+    6480:	10800017 	ldw	r2,0(r2)
     6484:	1004c03a 	cmpne	r2,r2,zero
     6488:	10000a1e 	bne	r2,zero,64b4 <prvDecideTask+0x670>
     648c:	00820034 	movhi	r2,2048
     6490:	10829d04 	addi	r2,r2,2676
-    6494:	10800717 	ldw	r2,28(r2)
+    6494:	10800017 	ldw	r2,0(r2)
     6498:	10800058 	cmpnei	r2,r2,1
     649c:	1000051e 	bne	r2,zero,64b4 <prvDecideTask+0x670>
     64a0:	00c20034 	movhi	r3,2048
     64a4:	18c29504 	addi	r3,r3,2644
     64a8:	00800044 	movi	r2,1
-    64ac:	18800715 	stw	r2,28(r3)
+    64ac:	18800015 	stw	r2,0(r3)
     64b0:	00006306 	br	6640 <prvDecideTask+0x7fc>
     64b4:	00820034 	movhi	r2,2048
     64b8:	10829504 	addi	r2,r2,2644
-    64bc:	10800617 	ldw	r2,24(r2)
+    64bc:	10800117 	ldw	r2,4(r2)
     64c0:	1004c03a 	cmpne	r2,r2,zero
     64c4:	10000a1e 	bne	r2,zero,64f0 <prvDecideTask+0x6ac>
     64c8:	00820034 	movhi	r2,2048
     64cc:	10829d04 	addi	r2,r2,2676
-    64d0:	10800617 	ldw	r2,24(r2)
+    64d0:	10800117 	ldw	r2,4(r2)
     64d4:	10800058 	cmpnei	r2,r2,1
     64d8:	1000051e 	bne	r2,zero,64f0 <prvDecideTask+0x6ac>
     64dc:	00c20034 	movhi	r3,2048
     64e0:	18c29504 	addi	r3,r3,2644
     64e4:	00800044 	movi	r2,1
-    64e8:	18800615 	stw	r2,24(r3)
+    64e8:	18800115 	stw	r2,4(r3)
     64ec:	00005406 	br	6640 <prvDecideTask+0x7fc>
     64f0:	00820034 	movhi	r2,2048
     64f4:	10829504 	addi	r2,r2,2644
-    64f8:	10800517 	ldw	r2,20(r2)
+    64f8:	10800217 	ldw	r2,8(r2)
     64fc:	1004c03a 	cmpne	r2,r2,zero
     6500:	10000a1e 	bne	r2,zero,652c <prvDecideTask+0x6e8>
     6504:	00820034 	movhi	r2,2048
     6508:	10829d04 	addi	r2,r2,2676
-    650c:	10800517 	ldw	r2,20(r2)
+    650c:	10800217 	ldw	r2,8(r2)
     6510:	10800058 	cmpnei	r2,r2,1
     6514:	1000051e 	bne	r2,zero,652c <prvDecideTask+0x6e8>
     6518:	00c20034 	movhi	r3,2048
     651c:	18c29504 	addi	r3,r3,2644
     6520:	00800044 	movi	r2,1
-    6524:	18800515 	stw	r2,20(r3)
+    6524:	18800215 	stw	r2,8(r3)
     6528:	00004506 	br	6640 <prvDecideTask+0x7fc>
     652c:	00820034 	movhi	r2,2048
     6530:	10829504 	addi	r2,r2,2644
-    6534:	10800417 	ldw	r2,16(r2)
+    6534:	10800317 	ldw	r2,12(r2)
     6538:	1004c03a 	cmpne	r2,r2,zero
     653c:	10000a1e 	bne	r2,zero,6568 <prvDecideTask+0x724>
     6540:	00820034 	movhi	r2,2048
     6544:	10829d04 	addi	r2,r2,2676
-    6548:	10800417 	ldw	r2,16(r2)
+    6548:	10800317 	ldw	r2,12(r2)
     654c:	10800058 	cmpnei	r2,r2,1
     6550:	1000051e 	bne	r2,zero,6568 <prvDecideTask+0x724>
     6554:	00c20034 	movhi	r3,2048
     6558:	18c29504 	addi	r3,r3,2644
     655c:	00800044 	movi	r2,1
-    6560:	18800415 	stw	r2,16(r3)
+    6560:	18800315 	stw	r2,12(r3)
     6564:	00003606 	br	6640 <prvDecideTask+0x7fc>
     6568:	00820034 	movhi	r2,2048
     656c:	10829504 	addi	r2,r2,2644
-    6570:	10800317 	ldw	r2,12(r2)
+    6570:	10800417 	ldw	r2,16(r2)
     6574:	1004c03a 	cmpne	r2,r2,zero
     6578:	10000a1e 	bne	r2,zero,65a4 <prvDecideTask+0x760>
     657c:	00820034 	movhi	r2,2048
     6580:	10829d04 	addi	r2,r2,2676
-    6584:	10800317 	ldw	r2,12(r2)
+    6584:	10800417 	ldw	r2,16(r2)
     6588:	10800058 	cmpnei	r2,r2,1
     658c:	1000051e 	bne	r2,zero,65a4 <prvDecideTask+0x760>
     6590:	00c20034 	movhi	r3,2048
     6594:	18c29504 	addi	r3,r3,2644
     6598:	00800044 	movi	r2,1
-    659c:	18800315 	stw	r2,12(r3)
+    659c:	18800415 	stw	r2,16(r3)
     65a0:	00002706 	br	6640 <prvDecideTask+0x7fc>
     65a4:	00820034 	movhi	r2,2048
     65a8:	10829504 	addi	r2,r2,2644
-    65ac:	10800217 	ldw	r2,8(r2)
+    65ac:	10800517 	ldw	r2,20(r2)
     65b0:	1004c03a 	cmpne	r2,r2,zero
     65b4:	10000a1e 	bne	r2,zero,65e0 <prvDecideTask+0x79c>
     65b8:	00820034 	movhi	r2,2048
     65bc:	10829d04 	addi	r2,r2,2676
-    65c0:	10800217 	ldw	r2,8(r2)
+    65c0:	10800517 	ldw	r2,20(r2)
     65c4:	10800058 	cmpnei	r2,r2,1
     65c8:	1000051e 	bne	r2,zero,65e0 <prvDecideTask+0x79c>
     65cc:	00c20034 	movhi	r3,2048
     65d0:	18c29504 	addi	r3,r3,2644
     65d4:	00800044 	movi	r2,1
-    65d8:	18800215 	stw	r2,8(r3)
+    65d8:	18800515 	stw	r2,20(r3)
     65dc:	00001806 	br	6640 <prvDecideTask+0x7fc>
     65e0:	00820034 	movhi	r2,2048
     65e4:	10829504 	addi	r2,r2,2644
-    65e8:	10800117 	ldw	r2,4(r2)
+    65e8:	10800617 	ldw	r2,24(r2)
     65ec:	1004c03a 	cmpne	r2,r2,zero
     65f0:	10000a1e 	bne	r2,zero,661c <prvDecideTask+0x7d8>
     65f4:	00820034 	movhi	r2,2048
     65f8:	10829d04 	addi	r2,r2,2676
-    65fc:	10800117 	ldw	r2,4(r2)
+    65fc:	10800617 	ldw	r2,24(r2)
     6600:	10800058 	cmpnei	r2,r2,1
     6604:	1000051e 	bne	r2,zero,661c <prvDecideTask+0x7d8>
     6608:	00c20034 	movhi	r3,2048
     660c:	18c29504 	addi	r3,r3,2644
     6610:	00800044 	movi	r2,1
-    6614:	18800115 	stw	r2,4(r3)
+    6614:	18800615 	stw	r2,24(r3)
     6618:	00000906 	br	6640 <prvDecideTask+0x7fc>
     661c:	00820034 	movhi	r2,2048
     6620:	10829d04 	addi	r2,r2,2676
-    6624:	10800017 	ldw	r2,0(r2)
+    6624:	10800717 	ldw	r2,28(r2)
     6628:	10800058 	cmpnei	r2,r2,1
     662c:	1000041e 	bne	r2,zero,6640 <prvDecideTask+0x7fc>
     6630:	00c20034 	movhi	r3,2048
     6634:	18c29504 	addi	r3,r3,2644
     6638:	00800044 	movi	r2,1
-    663c:	18800015 	stw	r2,0(r3)
+    663c:	18800715 	stw	r2,28(r3)
 				}
 				shed_flag = 0;
     6640:	d0203815 	stw	zero,-32544(gp)
