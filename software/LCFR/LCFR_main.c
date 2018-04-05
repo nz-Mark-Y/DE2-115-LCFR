@@ -23,6 +23,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/timers.h"
+#include "freertos/semphr.h"
 
 /*==============*/
 /* Definitions. */
@@ -119,6 +120,7 @@ TimerHandle_t recon_timer;
 TimerHandle_t system_up_timer;
 TimerHandle_t drop_delay_timer;
 static QueueHandle_t Q_freq_data;
+SemaphoreHandle_t shared_resource_mutex;
 
 /*=============*/
 /* Structures. */
@@ -139,13 +141,17 @@ void button_interrupts_function(void* context, alt_u32 id) {
 	(*temp) = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE); // Store which button was pressed
 
 	if (maintenance == 1) { // Toggle Maintenance Mode
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		maintenance = 0;
+		xSemaphoreGive(shared_resource_mutex);
 		printf("Maintenance Mode Disabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 		alt_up_ps2_disable_read_interrupt(ps2_device); // Disable keyboard
 	} else {
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		maintenance = 1;
+		xSemaphoreGive(shared_resource_mutex);
 		printf("Maintenance Mode Enabled\n");
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
@@ -161,14 +167,18 @@ void freq_relay() {
 
 	// Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
 	if (temp > 0) {
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
 		signal_freq = SAMPLE_FREQ / (double) temp;
+		xSemaphoreGive(shared_resource_mutex);
 	}
 
 	if ((first_load_shed == 0) && (drop_delay_flag == 0)) {
 		if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			drop_delay_flag = 1;
 			drop_delay = 0;
+			xSemaphoreGive(shared_resource_mutex);
 		}
 	}
 
@@ -184,8 +194,11 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 	if (byte == PS2_ENTER) {
 		if(input_duplicate_flag == 1) {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			input_duplicate_flag = 0;
+			xSemaphoreGive(shared_resource_mutex);
 		} else {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			if(input_decimal_flag == 1) {
 				input_decimal *= 10;
 			} else {
@@ -211,13 +224,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 
 			input_decimal_flag = 0;
 			input_number_counter = 0;
+			xSemaphoreGive(shared_resource_mutex);
 		}
 	} else if(byte == PS2_KEYRELEASE) {
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		input_duplicate_flag = 1;
+		xSemaphoreGive(shared_resource_mutex);
 	} else {
 		if(input_duplicate_flag == 1) {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			input_duplicate_flag = 0;
+			xSemaphoreGive(shared_resource_mutex);
 		} else {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			// Take care of decimal point
 			if (byte == PS2_DP) {
 				input_decimal_flag = 1;
@@ -244,6 +263,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 					input_decimal /= 10.0;
 				}
 			}
+			xSemaphoreGive(shared_resource_mutex);
 		}
 	}
 }
@@ -316,19 +336,27 @@ void translate_ps2(unsigned char byte, double *value) {
 /* Callbacks. */
 /*============*/
 void vTimerDropCallback(xTimerHandle t_timer) {
+	xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 	drop_load_timeout = 1;
+	xSemaphoreGive(shared_resource_mutex);
 }
 
 void vTimerReconnectCallback(xTimerHandle t_timer) {
+	xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 	reconnect_load_timeout = 1;
+	xSemaphoreGive(shared_resource_mutex);
 }
 
 void vTimerSystemUptimeCallback(xTimerHandle t_timer){
+	xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 	system_uptime += 1;
+	xSemaphoreGive(shared_resource_mutex);
 }
 
 void vTimerDropDelayCallback(xTimerHandle t_timer){
+	xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 	drop_delay += 1;
+	xSemaphoreGive(shared_resource_mutex);
 }
 
 /*================*/
@@ -363,7 +391,11 @@ int main(void) {
 	xTimerStart(system_up_timer, 0);
 	xTimerStart(drop_delay_timer, 0);
 
+	//Create queue
 	Q_freq_data = xQueueCreate( 100, sizeof(double) );
+
+	//Crete mutex
+	shared_resource_mutex = xSemaphoreCreateMutex(void);
 
 	// Set up Tasks
 	xTaskCreate( prvDecideTask, "Rreg1", configMINIMAL_STACK_SIZE, mainREG_DECIDE_PARAMETER, mainREG_TEST_PRIORITY, NULL);
@@ -391,45 +423,61 @@ static void prvDecideTask(void *pvParameters) {
 		for (i = 7; i >= 0; i--) { // Iterate through switches array and set if the switch is on or off
 			k = masked_switch_value >> i;
 			if (k & 1) { // If the switch at this position is on
+				xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 				switches[7-i] = 1;
+				xSemaphoreGive(shared_resource_mutex);
 				if (loads[7-i] == 0) {
 					no_loads_shed = 0;
 				}
 				if (maintenance == 1) {
+					xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 					loads[7-i] = 1;
+					xSemaphoreGive(shared_resource_mutex);
 				}
 			} else { // If the switch at this position is off
+				xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 				switches[7-i] = 0;
 				loads[7-i] = 0;
+				xSemaphoreGive(shared_resource_mutex);
 			}
 		}
 
 		if (no_loads_shed == 1) { // If all available loads are connected, we are not managing loads.
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			first_load_shed = 0;
+			xSemaphoreGive(shared_resource_mutex);
 		}
 
 		// Frequency Load Management
 		if (maintenance == 0) {
 			if (fabs(roc_freq) > desired_max_roc_freq || desired_min_freq > signal_freq) { // If the current system is unstable
 				if (first_load_shed == 0) { // Drop a load, if we have no dropped loads. First load drop.
+					xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 					first_load_shed = 1;
 					drop_load();
+					xSemaphoreGive(shared_resource_mutex);
 
 					if (drop_delay_flag == 1) {
 						if (drop_delay > max_drop_delay) {
+							xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 							max_drop_delay = drop_delay;
+							xSemaphoreGive(shared_resource_mutex);
 						}
 						if (((drop_delay < min_drop_delay) && (drop_delay != 0)) || (min_drop_delay == 0)) {
+							xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 							min_drop_delay = drop_delay;
+							xSemaphoreGive(shared_resource_mutex);
 						}
 						printf("Drop Time: %d ms\n", drop_delay);
+						xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 						drop_delay_flag = 0;
-
-						//Calculate accumulated average
 						drop_average = (drop_average + (double)drop_delay) / 2.0;
+						xSemaphoreGive(shared_resource_mutex);
 					}
 				} else {
+					xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
+					xSemaphoreGive(shared_resource_mutex);
 
 					if(shed_flag == 0) { // Stop the timer if we are timing a 500ms for a load reconnection
 						xTimerStop(recon_timer, 0);
@@ -442,11 +490,15 @@ static void prvDecideTask(void *pvParameters) {
 					} else {
 						drop_load();
 					}
+					xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 					shed_flag = 1;
+					xSemaphoreGive(shared_resource_mutex);
 				}
 			} else {
+				xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 				drop_load_timeout = 0; // No longer a continuous run of unstable data
-				
+				xSemaphoreGive(shared_resource_mutex);
+
 				if (shed_flag == 1) { // Stop the timer if we are timing a 500ms for a load drop
 					xTimerStop(drop_timer, 0);
 				}
@@ -458,7 +510,10 @@ static void prvDecideTask(void *pvParameters) {
 				} else {
 					reconnect_load();
 				}
+				xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 				shed_flag = 0;
+				xSemaphoreGive(shared_resource_mutex);
+
 			}
 		}
 		vTaskDelay(20);
@@ -500,12 +555,17 @@ static void prvLEDOutTask(void *pvParameters) {
 		
 		// Compute VGA data
 		for (i = 4; i >= 1; i--) {
+			xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 			store_freq[i] = store_freq[i-1];
 			store_dfreq[i] = store_dfreq[i-1];
+			xSemaphoreGive(shared_resource_mutex);
 		}
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		store_freq[0] = signal_freq;
 		store_dfreq[0] = roc_freq;
+		xSemaphoreGive(shared_resource_mutex);
 
+		xSemaphoreTake(shared_resource_mutex, portMAX_DELAY);
 		snprintf(m1, 5,"%f", store_freq[0]);
 		snprintf(m2, 5,"%f", store_freq[1]);
 		snprintf(m3, 5,"%f", store_freq[2]);
@@ -527,6 +587,7 @@ static void prvLEDOutTask(void *pvParameters) {
 		snprintf(max_drop_string, 8, "%d ms  ", max_drop_delay);
 
 		snprintf(average_drop_string, 8, "%.2f ms  ", drop_average);
+		xSemaphoreGive(shared_resource_mutex);
 
 		vTaskDelay(10);
 	}
