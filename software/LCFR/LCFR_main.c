@@ -144,6 +144,9 @@ void button_interrupts_function(void* context, alt_u32 id) {
 
 		alt_up_ps2_dev *ps2_device = alt_up_ps2_open_dev(PS2_NAME);
 		alt_up_ps2_disable_read_interrupt(ps2_device); // Disable keyboard
+
+		drop_delay = 0;
+		drop_delay_flag = 0;
 	} else {
 		maintenance = 1;
 		printf("Maintenance Mode Enabled\n");
@@ -415,7 +418,9 @@ static void prvDecideTask(void *pvParameters) {
 					first_load_shed = 1;
 					drop_load();
 
+					// Timing Drop Delay
 					if (drop_delay_flag == 1) {
+						// Set min and max
 						if (drop_delay > max_drop_delay) {
 							max_drop_delay = drop_delay;
 						}
@@ -423,17 +428,18 @@ static void prvDecideTask(void *pvParameters) {
 							min_drop_delay = drop_delay;
 						}
 
-						//Calculate accumulated average
+						// Calculate accumulated average
 						if (drop_average == 0) {
 							drop_average = (double) drop_delay;
 						} else {
 							drop_average = (drop_average + (double) drop_delay) / 2.0;
 						}
 
-						printf("Drop Time: %d ms\n", drop_delay);
+						if (drop_delay != 0) {
+							printf("Drop Time: %d ms\n", drop_delay);
+						}
+
 						drop_delay_flag = 0;
-
-
 					}
 				} else {
 					reconnect_load_timeout = 0; // No longer a continuous run of stable data
