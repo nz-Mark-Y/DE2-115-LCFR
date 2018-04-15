@@ -10,7 +10,7 @@ Manages 8 loads by monitoring frequency and frequency rate of change. Loads can 
 * VGA cable
 
 ## Setup ##
-1. Clone this repository to a local directory. Ensure its absolute path does not include any spaces.
+1. Extract the submitted zip file and include into Eclipse project.
 2. Configure the DE2-115 board using the Quartus II Programmer and the .sof file in this repository.
 3. Build and run the LCFR project in the software folder.
 

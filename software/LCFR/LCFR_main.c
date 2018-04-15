@@ -52,16 +52,16 @@
 #define PS2_KEYRELEASE 0xF0
 
 // Graphs
-#define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
-#define FREQPLT_GRID_SIZE_X 5	//pixel separation in the x axis between two data points
-#define FREQPLT_ORI_Y 199.0		//y axis pixel position at the plot origin
-#define FREQPLT_FREQ_RES 20.0	//number of pixels per Hz (y axis scale)
+#define FREQPLT_ORI_X 101		// X axis pixel position at the plot origin
+#define FREQPLT_GRID_SIZE_X 5	// Pixel separation in the x axis between two data points
+#define FREQPLT_ORI_Y 199.0		// Y axis pixel position at the plot origin
+#define FREQPLT_FREQ_RES 20.0	// Number of pixels per Hz (y axis scale)
 
 #define ROCPLT_ORI_X 101
 #define ROCPLT_GRID_SIZE_X 5
 #define ROCPLT_ORI_Y 259.0
-#define ROCPLT_ROC_RES 0.5		//number of pixels per Hz/s (y axis scale)
-#define MIN_FREQ 45.0 //minimum frequency to draw
+#define ROCPLT_ROC_RES 0.5		// Number of pixels per Hz/s (y axis scale)
+#define MIN_FREQ 45.0 			// Minimum frequency to draw
 
 /*========================*/
 /* Function Declarations. */
@@ -142,7 +142,7 @@ void button_interrupts_function(void* context, alt_u32 id) {
 
 	if (maintenance == 1) { // Toggle Maintenance Mode
 		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
-		maintenance = 0;
+		maintenance = 0; // Disable maintenance mode
 		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		printf("Maintenance Mode Disabled\n");
 
@@ -153,7 +153,7 @@ void button_interrupts_function(void* context, alt_u32 id) {
 		drop_delay_flag = 0;
 	} else {
 		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
-		maintenance = 1;
+		maintenance = 1; // Enable maintenance mode
 		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		printf("Maintenance Mode Enabled\n");
 
@@ -171,8 +171,8 @@ void freq_relay() {
 	// Important: do not swap the order of the two operations otherwise the roc will be 0 all the time
 	if (temp > 0) {
 		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
-		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp);
-		signal_freq = SAMPLE_FREQ / (double) temp;
+		roc_freq = ((SAMPLE_FREQ / (double) temp) - signal_freq) * (SAMPLE_FREQ / (double) temp); // Calculate and storeROC Frequency
+		signal_freq = SAMPLE_FREQ / (double) temp; // Calculate abd store Instantaneous Frequency
 		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 	}
 
@@ -195,26 +195,26 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	unsigned char byte;
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &byte);
 
-	if (byte == PS2_ENTER) {
-		if(input_duplicate_flag == 1) {
+	if (byte == PS2_ENTER) { // Enter key pressed
+		if (input_duplicate_flag == 1) { // Ignore key releases
 			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			input_duplicate_flag = 0;
 			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		} else {
 			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
-			if(input_decimal_flag == 1) {
+			if (input_decimal_flag == 1) {
 				input_decimal *= 10;
 			} else {
 				input_number /= 10;
 			}
 			input_final_number = input_number + input_decimal;
 			
-			if(desired_flag == 0) {
-				desired_min_freq = input_final_number;
+			if (desired_flag == 0) {
+				desired_min_freq = input_final_number; // Store entered value
 				printf("The preferred minimum frequency was set to: %f\n", desired_min_freq);
 				desired_flag = 1;
 			} else {
-				desired_max_roc_freq = input_final_number;
+				desired_max_roc_freq = input_final_number; // Store entered value
 				printf("The preferred maximum rate of change of frequency was set to: %f\n", desired_max_roc_freq);
 				desired_flag = 0;
 			}
@@ -229,19 +229,19 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 			input_number_counter = 0;
 			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		}
-	} else if(byte == PS2_KEYRELEASE) {
+	} else if (byte == PS2_KEYRELEASE) { // Ignore key releases
 		xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 		input_duplicate_flag = 1;
 		xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 	} else {
-		if(input_duplicate_flag == 1) {
+		if (input_duplicate_flag == 1) {
 			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			input_duplicate_flag = 0;
 			xSemaphoreGiveFromISR(shared_resource_mutex, NULL);
 		} else {
 			xSemaphoreTakeFromISR(shared_resource_mutex, NULL);
 			// Take care of decimal point
-			if (byte == PS2_DP) {
+			if (byte == PS2_DP) { // Handle decimal point
 				input_decimal_flag = 1;
 			}
 
@@ -552,7 +552,7 @@ static void prvLEDOutTask(void *pvParameters) {
 			}
 		}
 
-		//Translate to binary
+		// Translate to binary
 		for (i = 0; i < 8; i++) {
 			loads_num = loads_num << 1;
 			loads_num = loads_num + loads[i];
